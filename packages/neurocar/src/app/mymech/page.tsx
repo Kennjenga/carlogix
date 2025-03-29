@@ -1,7 +1,6 @@
-// src/app/mymech/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
@@ -28,7 +27,8 @@ export type Diagnosis = {
   relevantSources?: number;
 };
 
-export default function DigitalMechanicPage() {
+// Component that uses useSearchParams
+function MechPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { address } = useAccount();
@@ -294,5 +294,21 @@ export default function DigitalMechanicPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component wrapped with Suspense
+export default function DigitalMechanicPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <Loader size={32} className="animate-spin text-blue-600" />
+          <span className="ml-2 text-lg text-gray-700">Loading...</span>
+        </div>
+      }
+    >
+      <MechPageContent />
+    </Suspense>
   );
 }

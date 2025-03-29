@@ -10,42 +10,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100">
-      {/* Navigation */}
-      <nav className="bg-white shadow-md">
-        <div className="container mx-auto px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center">
-            <span className="text-xl font-bold text-blue-700">NeuroCar</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-gray-800 hover:text-blue-600 transition"
-            >
-              Home
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-gray-800 hover:text-blue-600 transition"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/mymech"
-              className="text-gray-800 hover:text-blue-600 transition"
-            >
-              Digi Mechanic
-            </Link>
-
-            <ConnectButton
-              accountStatus={{
-                smallScreen: "avatar",
-                largeScreen: "full",
-              }}
-            />
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <div
         className="relative overflow-hidden bg-cover bg-center h-screen"
