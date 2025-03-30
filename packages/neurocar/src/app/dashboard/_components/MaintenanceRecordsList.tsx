@@ -1,9 +1,9 @@
 "use client";
 
-// app/dashboard/_components/MaintenanceRecordsList.tsx
 import React from "react";
 import { useMaintenanceRecords } from "@/blockchain/hooks/useContractReads";
 import { Wrench, FileText, AlertCircle, Loader } from "lucide-react";
+import { MaintenanceRecord } from "@/types";
 
 interface MaintenanceRecordsListProps {
   tokenId: string;
@@ -16,17 +16,8 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
     data: records,
     isLoading,
     isError,
-  } = useMaintenanceRecords(BigInt(tokenId), 296) as {
-    data: {
-      description: string;
-      timestamp: number;
-      serviceProvider: string;
-      mileage: number;
-      documentURI?: string;
-    }[];
-    isLoading: boolean;
-    isError: boolean;
-  };
+    refetch,
+  } = useMaintenanceRecords(BigInt(tokenId), 296);
 
   // Display loading state
   if (isLoading) {
@@ -47,6 +38,12 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
             <h3 className="text-sm font-medium text-red-800">
               Error loading maintenance records
             </h3>
+            <button
+              onClick={() => refetch?.()}
+              className="mt-2 px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </div>
@@ -54,7 +51,7 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
   }
 
   // Display empty state
-  if (records.length === 0) {
+  if (!Array.isArray(records) || records.length === 0) {
     return (
       <div className="rounded-md bg-gray-50 p-4 mb-4 border border-gray-200">
         <div className="flex justify-center items-center py-4">
@@ -68,9 +65,19 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
   }
 
   // Sort records by timestamp (newest first)
-  const sortedRecords = [...records].sort(
+  const sortedRecords = [...(records as MaintenanceRecord[])].sort(
     (a, b) => Number(b.timestamp) - Number(a.timestamp)
   );
+
+  // Helper function to format IPFS URI
+  const formatIPFSLink = (uri: string): string | undefined => {
+    if (!uri) return undefined;
+
+    if (uri.startsWith("ipfs://")) {
+      return `https://ipfs.io/ipfs/${uri.replace("ipfs://", "")}`;
+    }
+    return uri;
+  };
 
   return (
     <div className="border border-gray-200 rounded-md overflow-hidden">
@@ -101,14 +108,7 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
               {record.documentURI && (
                 <div className="md:col-span-2 mt-2">
                   <a
-                    href={
-                      record.documentURI.includes("ipfs://")
-                        ? `https://ipfs.io/ipfs/${record.documentURI.replace(
-                            "ipfs://",
-                            ""
-                          )}`
-                        : record.documentURI
-                    }
+                    href={formatIPFSLink(record.documentURI)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-blue-600 hover:text-blue-800"

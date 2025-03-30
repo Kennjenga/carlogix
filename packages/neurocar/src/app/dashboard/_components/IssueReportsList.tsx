@@ -1,6 +1,5 @@
 "use client";
 
-// app/dashboard/_components/IssueReportsList.tsx
 import React from "react";
 import { useIssueReports } from "@/blockchain/hooks/useContractReads";
 import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
@@ -22,6 +21,7 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
     data: reports,
     isLoading,
     isError,
+    refetch,
   } = useIssueReports(BigInt(tokenId), 296);
 
   const carNFT = useCarNFTData(296);
@@ -30,6 +30,8 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
   const handleResolveIssue = async (reportIndex: number) => {
     try {
       await carNFT.resolveIssue(BigInt(tokenId), reportIndex);
+      // Refetch after resolving the issue
+      setTimeout(() => refetch?.(), 2000);
     } catch (error) {
       console.error("Error resolving issue:", error);
     }
@@ -54,17 +56,20 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
             <h3 className="text-sm font-medium text-red-800">
               Error loading issue reports
             </h3>
+            <button
+              onClick={() => refetch?.()}
+              className="mt-2 px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  // We know reports is an array at this point, so type assert it
-  const issueReports = reports as IssueReport[];
-
   // Display empty state
-  if (issueReports.length === 0) {
+  if (!Array.isArray(reports) || reports.length === 0) {
     return (
       <div className="rounded-md bg-gray-50 p-4 mb-4 border border-gray-200">
         <div className="flex justify-center items-center py-4">
@@ -76,9 +81,19 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
   }
 
   // Sort reports by timestamp (newest first)
-  const sortedReports = [...issueReports].sort(
+  const sortedReports = [...(reports as IssueReport[])].sort(
     (a, b) => Number(b.timestamp) - Number(a.timestamp)
   );
+
+  // Helper function to format IPFS URI
+  const formatIPFSLink = (uri: string): string | undefined => {
+    if (!uri) return undefined;
+
+    if (uri.startsWith("ipfs://")) {
+      return `https://ipfs.io/ipfs/${uri.replace("ipfs://", "")}`;
+    }
+    return uri;
+  };
 
   return (
     <div className="border border-gray-200 rounded-md overflow-hidden">
@@ -109,14 +124,7 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
               <div className="flex justify-between items-center mt-2">
                 {report.evidenceURI && (
                   <a
-                    href={
-                      report.evidenceURI.includes("ipfs://")
-                        ? `https://ipfs.io/ipfs/${report.evidenceURI.replace(
-                            "ipfs://",
-                            ""
-                          )}`
-                        : report.evidenceURI
-                    }
+                    href={formatIPFSLink(report.evidenceURI)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"

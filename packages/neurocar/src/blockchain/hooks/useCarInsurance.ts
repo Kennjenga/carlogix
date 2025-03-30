@@ -467,6 +467,8 @@ export function useCarInsuranceData(chainId: number = 296) {
     })
   }
 
+  
+
   return {
     // Write operations - Pool management
     createPool,

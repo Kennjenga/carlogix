@@ -21,8 +21,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload the file to Pinata
-    const { cid } = await pinata.upload.public.file(file);
+    // Create options with metadata for the file
+    const options = {
+      name: `neurocar/${file.name}`,
+      metadata: {
+        keyvalues: {
+          app: "neurocar",
+          timestamp: Date.now().toString()
+        }
+      }
+    };
+
+    // Upload the file to Pinata with the folder prefix in the name
+    const { cid } = await pinata.upload.public.file(file, options);
     
     // Get a gateway URL for the uploaded file
     const url = await pinata.gateways.public.convert(cid);
@@ -31,7 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       cid, 
       url,
-      message: "File uploaded successfully"
+      message: "File uploaded successfully to neurocar folder"
     }, { status: 200 });
     
   } catch (e) {
