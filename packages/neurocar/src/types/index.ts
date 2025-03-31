@@ -29,7 +29,7 @@ export type IssueReport = {
   evidenceURI: string;
 }
 
-export type CarWithId = CarDetails & { id: string; mileage: bigint; };
+export type CarWithId = CarDetails & { tokenId: bigint; id: string; mileage: bigint; };
 
 // ======= Car Insurance Types =======
 

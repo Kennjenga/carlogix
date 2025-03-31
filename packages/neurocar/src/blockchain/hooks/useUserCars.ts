@@ -1,10 +1,11 @@
-// src/blockchain/hooks/useUserCars.ts
+"use client";
+
 import { useState, useEffect } from 'react';
 import { Address, createPublicClient, http } from 'viem';
 import { hederaTestnet, sepolia } from 'viem/chains';
 import { useAccount } from 'wagmi';
 import { carnft_abi, carnft_address } from '@/blockchain/abi/neuro';
-import { CarDetails, CarWithId } from '@/types';
+import { CarDetails, CarWithId, MaintenanceRecord } from '@/types';
 
 export function useUserCars(ownerAddress?: Address, chainId: number = 296) {
   const { address: connectedAddress } = useAccount();
@@ -46,7 +47,7 @@ export function useUserCars(ownerAddress?: Address, chainId: number = 296) {
           return;
         }
         
-        const userCars = [];
+        const userCars: CarWithId[] = [];
         
         // 2. For each token index, get the token ID and then the car details
         for (let i = 0; i < Number(balance); i++) {
@@ -67,9 +68,31 @@ export function useUserCars(ownerAddress?: Address, chainId: number = 296) {
               args: [tokenId]
             }) as CarDetails;
             
+            // Get the latest maintenance record to display current mileage
+            let currentMileage = BigInt(0);
+            try {
+              const maintenanceRecords = await client.readContract({
+                address: carnft_address as Address,
+                abi: carnft_abi,
+                functionName: 'getMaintenanceRecords',
+                args: [tokenId]
+              }) as MaintenanceRecord[];
+              
+              if (maintenanceRecords.length > 0) {
+                // Sort by timestamp descending to get the latest record
+                const sortedRecords = [...maintenanceRecords].sort(
+                  (a, b) => Number(b.timestamp - a.timestamp)
+                );
+                currentMileage = sortedRecords[0].mileage;
+              }
+            } catch (err) {
+              console.error(`Error fetching maintenance records for car ${tokenId}:`, err);
+            }
+            
             userCars.push({
               id: tokenId.toString(),
-              mileage: BigInt(0), // Default or fetched mileage value
+              tokenId: tokenId,
+              mileage: currentMileage,
               ...carDetails
             });
           } catch (e) {
@@ -89,5 +112,15 @@ export function useUserCars(ownerAddress?: Address, chainId: number = 296) {
     fetchUserCars();
   }, [targetAddress, chainId]);
 
-  return { cars, loading, error };
+  const refreshCars = () => {
+    setLoading(true);
+    setError(null);
+    // This will trigger the useEffect to run again
+    // by creating a new function reference
+    setTimeout(() => {
+      setCars(prev => [...prev]);
+    }, 100);
+  };
+
+  return { cars, loading, error, refreshCars };
 }

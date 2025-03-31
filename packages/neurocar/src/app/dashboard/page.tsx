@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import Image from "next/image";
 import {
   Car,
   Plus,
@@ -10,6 +11,8 @@ import {
   Shield,
   FileText,
   Loader,
+  // ChevronLeft,
+  // ChevronRight,
 } from "lucide-react";
 import { CarWithId } from "@/types";
 import MaintenanceRecordsList from "./_components/MaintenanceRecordsList";
@@ -18,21 +21,18 @@ import InsurancePools from "./_components/InsurancePools";
 import InsuranceClaims from "./_components/InsuranceClaims";
 import { useUserCars } from "@/blockchain/hooks/useUserCars";
 import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
-import { useCarInsuranceData } from "@/blockchain/hooks/useCarInsurance";
+// import { useCarInsuranceData } from "@/blockchain/hooks/useCarInsurance";
+import IPFSUpload from "./_components/IPFSUpload";
 
 export default function Dashboard() {
   const { address } = useAccount();
-
-  // State for selected car and tab
   const [selectedCar, setSelectedCar] = useState<CarWithId | null>(null);
   const [activeTab, setActiveTab] = useState("maintenance");
-
-  // State for loading indicators
   const [mintLoading, setMintLoading] = useState(false);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
   const [issueLoading, setIssueLoading] = useState(false);
 
-  // Form input states
+  // Form states
   const [mintFormData, setMintFormData] = useState({
     make: "",
     model: "",
@@ -61,48 +61,24 @@ export default function Dashboard() {
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
 
-  // Fetch user's cars
+  // Hooks for data fetching
   const {
     cars: userCars,
     loading: carsLoading,
     error: carsError,
   } = useUserCars(address);
+  const { mintCar, addMaintenanceRecord, reportIssue } = useCarNFTData();
 
-  // Contract interaction hooks
-  const {
-    mintCar,
-    addMaintenanceRecord,
-    reportIssue,
-    lastCarMintedEvent,
-    lastMaintenanceAddedEvent,
-    lastIssueReportedEvent,
-  } = useCarNFTData();
-
-  const {
-    // joinPool,
-    // fileClaim,
-    // lastPoolCreatedEvent,
-    // lastMemberJoinedEvent,
-    // lastClaimFiledEvent,
-  } = useCarInsuranceData();
-
-  // Set first car as selected on initial load
+  // Set first car as selected on load
   useEffect(() => {
     if (userCars && userCars.length > 0 && !selectedCar) {
       setSelectedCar(userCars[0]);
     }
   }, [userCars, selectedCar]);
 
-  // Refresh data when events are detected
-  useEffect(() => {
-    // This would trigger a refresh of the cars list when relevant events occur
-    // In a real implementation, you might want to add more sophisticated logic
-  }, [lastCarMintedEvent, lastMaintenanceAddedEvent, lastIssueReportedEvent]);
-
-  // Handle minting a new car NFT
+  // Handle car minting
   const handleMintCar = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (
       !address ||
       !mintFormData.make ||
@@ -125,8 +101,7 @@ export default function Dashboard() {
         mintFormData.registrationNumber || "",
         mintFormData.metadataURI || ""
       );
-
-      // Reset form and close modal
+      setShowMintModal(false);
       setMintFormData({
         make: "",
         model: "",
@@ -136,25 +111,23 @@ export default function Dashboard() {
         registrationNumber: "",
         metadataURI: "",
       });
-      setShowMintModal(false);
     } catch (error) {
-      console.error("Error minting car NFT:", error);
-      alert("Failed to mint car NFT. See console for details.");
+      console.error("Minting error:", error);
+      alert("Failed to mint vehicle NFT");
     } finally {
       setMintLoading(false);
     }
   };
 
-  // Handle adding a maintenance record
+  // Handle maintenance record addition
   const handleAddMaintenance = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (
       !selectedCar ||
       !maintenanceFormData.description ||
       !maintenanceFormData.mileage
     ) {
-      alert("Please select a car and fill all required fields");
+      alert("Please fill all required fields");
       return;
     }
 
@@ -167,33 +140,30 @@ export default function Dashboard() {
         parseInt(maintenanceFormData.mileage),
         maintenanceFormData.documentURI || ""
       );
-
-      // Reset form and close modal
+      setShowMaintenanceModal(false);
       setMaintenanceFormData({
         description: "",
         serviceProvider: "",
         mileage: "",
         documentURI: "",
       });
-      setShowMaintenanceModal(false);
     } catch (error) {
-      console.error("Error adding maintenance record:", error);
-      alert("Failed to add maintenance record. See console for details.");
+      console.error("Maintenance error:", error);
+      alert("Failed to add maintenance record");
     } finally {
       setMaintenanceLoading(false);
     }
   };
 
-  // Handle reporting an issue
+  // Handle issue reporting
   const handleReportIssue = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (
       !selectedCar ||
       !issueFormData.issueType ||
       !issueFormData.description
     ) {
-      alert("Please select a car and fill all required fields");
+      alert("Please fill all required fields");
       return;
     }
 
@@ -205,17 +175,15 @@ export default function Dashboard() {
         issueFormData.description,
         issueFormData.evidenceURI || ""
       );
-
-      // Reset form and close modal
+      setShowIssueModal(false);
       setIssueFormData({
         issueType: "",
         description: "",
         evidenceURI: "",
       });
-      setShowIssueModal(false);
     } catch (error) {
-      console.error("Error reporting issue:", error);
-      alert("Failed to report issue. See console for details.");
+      console.error("Issue reporting error:", error);
+      alert("Failed to report issue");
     } finally {
       setIssueLoading(false);
     }
@@ -256,9 +224,9 @@ export default function Dashboard() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar with car list */}
+        {/* Sidebar - Vehicle List */}
         <div className="w-full md:w-1/4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-800">
                 My Vehicles
@@ -273,7 +241,7 @@ export default function Dashboard() {
             </div>
 
             {userCars && userCars.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[calc(100vh-180px)] overflow-y-auto">
                 {userCars.map((car) => (
                   <div
                     key={car.id}
@@ -286,11 +254,11 @@ export default function Dashboard() {
                   >
                     <div className="flex items-center">
                       <Car size={20} className="text-blue-600 mr-2" />
-                      <div>
-                        <h3 className="font-medium text-gray-900">
+                      <div className="truncate">
+                        <h3 className="font-medium text-gray-900 truncate">
                           {car.make} {car.model}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 truncate">
                           {car.year} • VIN: {car.vin.substring(0, 8)}...
                         </p>
                       </div>
@@ -313,25 +281,50 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Main content area */}
+        {/* Main Content Area */}
         <div className="w-full md:w-3/4">
           {selectedCar ? (
             <>
-              {/* Car details header */}
+              {/* Vehicle Header */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      {selectedCar.make} {selectedCar.model}
-                    </h1>
-                    <p className="text-gray-500">
-                      {selectedCar.year} • VIN: {selectedCar.vin}
-                    </p>
-                    <p className="text-gray-500">
-                      Current Mileage: {selectedCar.mileage} miles
-                    </p>
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                  <div className="flex items-center gap-4">
+                    {selectedCar.metadataURI ? (
+                      <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-100">
+                        <Image
+                          src={selectedCar.metadataURI.replace(
+                            "ipfs://",
+                            "https://ipfs.io/ipfs/"
+                          )}
+                          alt={`${selectedCar.make} ${selectedCar.model}`}
+                          className="w-full h-full object-cover"
+                          width={64}
+                          height={64}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-md bg-gray-100 flex items-center justify-center">
+                        <Car size={24} className="text-gray-400" />
+                      </div>
+                    )}
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900">
+                        {selectedCar.make} {selectedCar.model}
+                      </h1>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                        <p className="text-gray-500 text-sm">
+                          {selectedCar.year}
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                          VIN: {selectedCar.vin}
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                          Mileage: {selectedCar.mileage.toLocaleString()} miles
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 justify-end">
                     <button
                       onClick={() => setShowMaintenanceModal(true)}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
@@ -350,116 +343,93 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Tabs */}
+              {/* Navigation Tabs */}
               <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-8">
+                <nav className="-mb-px flex space-x-8 overflow-x-auto">
                   <button
                     onClick={() => setActiveTab("maintenance")}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                       activeTab === "maintenance"
                         ? "border-blue-500 text-blue-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
-                    <Wrench size={16} className="inline mr-2" />
+                    <Wrench size={16} className="mr-2" />
                     Maintenance History
                   </button>
                   <button
                     onClick={() => setActiveTab("issues")}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                       activeTab === "issues"
                         ? "border-blue-500 text-blue-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
-                    <AlertTriangle size={16} className="inline mr-2" />
+                    <AlertTriangle size={16} className="mr-2" />
                     Issue Reports
                   </button>
                   <button
                     onClick={() => setActiveTab("insurance")}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                       activeTab === "insurance"
                         ? "border-blue-500 text-blue-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
-                    <Shield size={16} className="inline mr-2" />
+                    <Shield size={16} className="mr-2" />
                     Insurance
                   </button>
                   <button
                     onClick={() => setActiveTab("claims")}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                       activeTab === "claims"
                         ? "border-blue-500 text-blue-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
-                    <FileText size={16} className="inline mr-2" />
-                    Claims
+                    <FileText size={16} className="mr-2" />
+                    Claims History
                   </button>
                 </nav>
               </div>
 
-              {/* Tab content */}
+              {/* Tab Content */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 {activeTab === "maintenance" && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                      Maintenance Records
-                    </h2>
-                    <MaintenanceRecordsList tokenId={selectedCar.id} />
-                  </div>
+                  <MaintenanceRecordsList tokenId={selectedCar.id} />
                 )}
-
                 {activeTab === "issues" && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                      Issue Reports
-                    </h2>
-                    <IssueReportsList tokenId={selectedCar.id} />
-                  </div>
+                  <IssueReportsList tokenId={selectedCar.id} />
                 )}
-
                 {activeTab === "insurance" && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                      Insurance Pools
-                    </h2>
-                    <InsurancePools
-                      pools={[
-                        {
-                          id: "1",
-                          name: "Standard Coverage Pool",
-                          description: "Basic coverage for most vehicles",
-                          minContribution: BigInt(1000000000000000000), // 1 ETH
-                          maxCoverage: BigInt(10000000000000000000), // 10 ETH
-                          memberCount: 24,
-                          totalFunds: BigInt(35000000000000000000), // 35 ETH
-                        },
-                        {
-                          id: "2",
-                          name: "Premium Coverage Pool",
-                          description: "Enhanced coverage for luxury vehicles",
-                          minContribution: BigInt(5000000000000000000), // 5 ETH
-                          maxCoverage: BigInt(50000000000000000000), // 50 ETH
-                          memberCount: 12,
-                          totalFunds: BigInt(85000000000000000000), // 85 ETH
-                        },
-                      ]}
-                      cars={userCars || []}
-                      selectedCar={selectedCar}
-                      loading={false}
-                    />
-                  </div>
+                  <InsurancePools
+                    pools={[
+                      {
+                        id: "1",
+                        name: "Standard Coverage",
+                        description: "Basic coverage for most vehicles",
+                        minContribution: BigInt(1000000000000000000),
+                        maxCoverage: BigInt(10000000000000000000),
+                        memberCount: 24,
+                        totalFunds: BigInt(35000000000000000000),
+                      },
+                      {
+                        id: "2",
+                        name: "Premium Coverage",
+                        description: "Enhanced coverage for luxury vehicles",
+                        minContribution: BigInt(5000000000000000000),
+                        maxCoverage: BigInt(50000000000000000000),
+                        memberCount: 12,
+                        totalFunds: BigInt(85000000000000000000),
+                      },
+                    ]}
+                    cars={userCars || []}
+                    selectedCar={selectedCar}
+                    loading={false}
+                  />
                 )}
-
                 {activeTab === "claims" && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                      Insurance Claims
-                    </h2>
-                    <InsuranceClaims tokenId={selectedCar.id} />
-                  </div>
+                  <InsuranceClaims tokenId={selectedCar.id} />
                 )}
               </div>
             </>
@@ -483,18 +453,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Mint Car Modal */}
+      {/* Mint Vehicle Modal */}
       {showMintModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Add New Vehicle
             </h2>
             <form onSubmit={handleMintCar}>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Make
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Make <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -502,13 +472,13 @@ export default function Dashboard() {
                     onChange={(e) =>
                       setMintFormData({ ...mintFormData, make: e.target.value })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Model
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Model <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -519,13 +489,13 @@ export default function Dashboard() {
                         model: e.target.value,
                       })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Year
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Year <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -533,15 +503,15 @@ export default function Dashboard() {
                     onChange={(e) =>
                       setMintFormData({ ...mintFormData, year: e.target.value })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     required
                     min="1900"
                     max={new Date().getFullYear()}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    VIN
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    VIN <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -549,12 +519,12 @@ export default function Dashboard() {
                     onChange={(e) =>
                       setMintFormData({ ...mintFormData, vin: e.target.value })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Registration Number
                   </label>
                   <input
@@ -566,11 +536,11 @@ export default function Dashboard() {
                         registrationNumber: e.target.value,
                       })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Initial Mileage
                   </label>
                   <input
@@ -582,29 +552,29 @@ export default function Dashboard() {
                         initialMileage: e.target.value,
                       })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     min="0"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Metadata URI (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={mintFormData.metadataURI}
-                    onChange={(e) =>
-                      setMintFormData({
-                        ...mintFormData,
-                        metadataURI: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="ipfs://..."
-                  />
-                </div>
               </div>
-              <div className="mt-6 flex justify-end space-x-3">
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Vehicle Image <span className="text-red-500">*</span>
+                </label>
+                <IPFSUpload
+                  onUploadComplete={(url) => {
+                    setMintFormData({ ...mintFormData, metadataURI: url });
+                  }}
+                />
+                {mintFormData.metadataURI && (
+                  <p className="mt-2 text-sm text-gray-500 truncate">
+                    Uploaded: {mintFormData.metadataURI}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setShowMintModal(false)}
@@ -614,8 +584,8 @@ export default function Dashboard() {
                 </button>
                 <button
                   type="submit"
-                  disabled={mintLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                  disabled={mintLoading || !mintFormData.metadataURI}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
                 >
                   {mintLoading ? (
                     <>
@@ -623,7 +593,7 @@ export default function Dashboard() {
                       Minting...
                     </>
                   ) : (
-                    "Mint NFT"
+                    "Mint Vehicle NFT"
                   )}
                 </button>
               </div>
@@ -634,16 +604,16 @@ export default function Dashboard() {
 
       {/* Add Maintenance Modal */}
       {showMaintenanceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Add Maintenance Record
             </h2>
             <form onSubmit={handleAddMaintenance}>
-              <div className="space-y-4">
+              <div className="space-y-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Description
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={maintenanceFormData.description}
@@ -653,64 +623,68 @@ export default function Dashboard() {
                         description: e.target.value,
                       })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     required
                     rows={3}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Service Provider
-                  </label>
-                  <input
-                    type="text"
-                    value={maintenanceFormData.serviceProvider}
-                    onChange={(e) =>
-                      setMaintenanceFormData({
-                        ...maintenanceFormData,
-                        serviceProvider: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Service Provider
+                    </label>
+                    <input
+                      type="text"
+                      value={maintenanceFormData.serviceProvider}
+                      onChange={(e) =>
+                        setMaintenanceFormData({
+                          ...maintenanceFormData,
+                          serviceProvider: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Mileage <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={maintenanceFormData.mileage}
+                      onChange={(e) =>
+                        setMaintenanceFormData({
+                          ...maintenanceFormData,
+                          mileage: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                      min="0"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Mileage
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Service Document
                   </label>
-                  <input
-                    type="number"
-                    value={maintenanceFormData.mileage}
-                    onChange={(e) =>
+                  <IPFSUpload
+                    onUploadComplete={(url) => {
                       setMaintenanceFormData({
                         ...maintenanceFormData,
-                        mileage: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                    min="0"
+                        documentURI: url,
+                      });
+                    }}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Document URI (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={maintenanceFormData.documentURI}
-                    onChange={(e) =>
-                      setMaintenanceFormData({
-                        ...maintenanceFormData,
-                        documentURI: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="ipfs://..."
-                  />
+                  {maintenanceFormData.documentURI && (
+                    <p className="mt-2 text-sm text-gray-500 truncate">
+                      Uploaded: {maintenanceFormData.documentURI}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="mt-6 flex justify-end space-x-3">
+
+              <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setShowMaintenanceModal(false)}
@@ -721,7 +695,7 @@ export default function Dashboard() {
                 <button
                   type="submit"
                   disabled={maintenanceLoading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-green-400"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
                 >
                   {maintenanceLoading ? (
                     <>
@@ -729,7 +703,7 @@ export default function Dashboard() {
                       Saving...
                     </>
                   ) : (
-                    "Add Record"
+                    "Add Maintenance Record"
                   )}
                 </button>
               </div>
@@ -740,16 +714,16 @@ export default function Dashboard() {
 
       {/* Report Issue Modal */}
       {showIssueModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Report Vehicle Issue
             </h2>
             <form onSubmit={handleReportIssue}>
-              <div className="space-y-4">
+              <div className="space-y-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Issue Type
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Issue Type <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={issueFormData.issueType}
@@ -759,7 +733,7 @@ export default function Dashboard() {
                         issueType: e.target.value,
                       })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     required
                   >
                     <option value="">Select issue type</option>
@@ -772,8 +746,8 @@ export default function Dashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Description
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={issueFormData.description}
@@ -783,30 +757,32 @@ export default function Dashboard() {
                         description: e.target.value,
                       })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     required
                     rows={3}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Evidence URI (optional)
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Evidence (Photos/Documents)
                   </label>
-                  <input
-                    type="text"
-                    value={issueFormData.evidenceURI}
-                    onChange={(e) =>
+                  <IPFSUpload
+                    onUploadComplete={(url) => {
                       setIssueFormData({
                         ...issueFormData,
-                        evidenceURI: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="IPFS URI or other link to evidence"
+                        evidenceURI: url,
+                      });
+                    }}
                   />
+                  {issueFormData.evidenceURI && (
+                    <p className="mt-2 text-sm text-gray-500 truncate">
+                      Uploaded: {issueFormData.evidenceURI}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="mt-6 flex justify-end space-x-3">
+
+              <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setShowIssueModal(false)}
@@ -817,7 +793,7 @@ export default function Dashboard() {
                 <button
                   type="submit"
                   disabled={issueLoading}
-                  className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors disabled:bg-yellow-400"
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors disabled:bg-yellow-400 disabled:cursor-not-allowed"
                 >
                   {issueLoading ? (
                     <>

@@ -2,8 +2,31 @@
 
 // src/blockchain/hooks/useContractReads.ts
 import { useReadContract } from 'wagmi'
-import { Address } from 'viem'
+import { Abi, Address } from 'viem'
+import { createPublicClient, http } from 'viem';
+import { hederaTestnet } from 'viem/chains';
 import { carnft_abi, carnft_address, carinsurance_abi, carinsurance_address } from '@/blockchain/abi/neuro'
+
+// Define the correct RPC URL for Hedera testnet
+const HEDERA_RPC_URL = "https://testnet.hashio.io/api";
+
+// Client for direct blockchain interactions
+const publicClient = createPublicClient({
+  chain: {
+    ...hederaTestnet,
+    id: 296,
+    name: 'Hedera Testnet',
+    rpcUrls: {
+      default: {
+        http: [HEDERA_RPC_URL],
+      },
+      public: {
+        http: [HEDERA_RPC_URL],
+      },
+    },
+  },
+  transport: http(HEDERA_RPC_URL),
+});
 
 // -- Car NFT Read Hooks --
 
@@ -31,8 +54,53 @@ export function useMaintenanceRecords(tokenId: bigint | number | undefined, chai
     chainId,
     query: {
       enabled: tokenId !== undefined,
-    }
+      retry: 3,
+      staleTime: 60000, // 1 minute
+    },
+    // Custom RPC URL to prevent 404 errors
   })
+}
+
+// Get multiple maintenance records in a batch
+export async function fetchMultipleMaintenanceRecords(tokenIds: number[]) {
+  if (!tokenIds.length) return {};
+
+  try {
+    // Convert all tokenIds to BigInt for blockchain interaction
+    const bigIntTokenIds = tokenIds.map(id => BigInt(id));
+    
+    // Create an array of contract read calls
+    const calls = bigIntTokenIds.map(tokenId => ({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'getMaintenanceRecords',
+      args: [tokenId]
+    }));
+    
+    // Execute all calls in parallel using multicall
+    const results = await publicClient.multicall({
+      contracts: calls,
+    });
+    
+    // Process results into a structured object
+    const recordsMap: Record<string, unknown[]> = {};
+    
+    results.forEach((result, index) => {
+      const tokenId = tokenIds[index].toString();
+      
+      if (result.status === 'success') {
+        recordsMap[tokenId] = result.result as unknown[];
+      } else {
+        console.error(`Failed to fetch records for token ID ${tokenId}:`, result.error);
+        recordsMap[tokenId] = [];
+      }
+    });
+    
+    return recordsMap;
+  } catch (error) {
+    console.error('Error in batch fetch operation:', error);
+    throw error;
+  }
 }
 
 // Get issue reports
@@ -239,7 +307,7 @@ export function useCarClaims(tokenId: bigint | number | undefined, chainId: numb
   })
 }
 
-// Assessor management hooks
+// Assessor management hook
 export function useAssessorDetails(assessorAddress: Address | undefined, chainId: number = 296) {
   return useReadContract({
     address: carinsurance_address as Address,
