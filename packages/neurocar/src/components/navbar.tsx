@@ -67,7 +67,7 @@ const Navbar = () => {
         }`}
       >
         <div className="container mx-auto px-6 flex flex-col space-y-4">
-          {["Home", "Dashboard", "Digi Mechanic"].map((item, index) => (
+          {["Home", "Dashboard", "mymech"].map((item, index) => (
             <Link
               key={index}
               href={
