@@ -403,26 +403,6 @@ export default function Dashboard() {
                 )}
                 {activeTab === "insurance" && (
                   <InsurancePools
-                    pools={[
-                      {
-                        id: "1",
-                        name: "Standard Coverage",
-                        description: "Basic coverage for most vehicles",
-                        minContribution: BigInt(1000000000000000000),
-                        maxCoverage: BigInt(10000000000000000000),
-                        memberCount: 24,
-                        totalFunds: BigInt(35000000000000000000),
-                      },
-                      {
-                        id: "2",
-                        name: "Premium Coverage",
-                        description: "Enhanced coverage for luxury vehicles",
-                        minContribution: BigInt(5000000000000000000),
-                        maxCoverage: BigInt(50000000000000000000),
-                        memberCount: 12,
-                        totalFunds: BigInt(85000000000000000000),
-                      },
-                    ]}
                     cars={userCars || []}
                     selectedCar={selectedCar}
                     loading={false}
