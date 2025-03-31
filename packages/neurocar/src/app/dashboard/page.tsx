@@ -201,6 +201,8 @@ export default function Dashboard() {
     );
   }
 
+  console.log(selectedCar);
+
   // Error state
   if (carsError) {
     return (
@@ -435,9 +437,9 @@ export default function Dashboard() {
 
       {/* Mint Vehicle Modal */}
       {showMintModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-slate-400 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white bg-opacity-90 backdrop-filter backdrop-blur-md rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col shadow-xl">
+            <div className="p-6 border-b border-gray-200 bg-white bg-opacity-70">
               <h2 className="text-xl font-semibold text-gray-800">
                 Add New Vehicle
               </h2>
@@ -460,7 +462,7 @@ export default function Dashboard() {
                           make: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       required
                     />
                   </div>
@@ -477,7 +479,7 @@ export default function Dashboard() {
                           model: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       required
                     />
                   </div>
@@ -494,7 +496,7 @@ export default function Dashboard() {
                           year: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       required
                       min="1900"
                       max={new Date().getFullYear()}
@@ -513,7 +515,7 @@ export default function Dashboard() {
                           vin: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       required
                     />
                   </div>
@@ -530,7 +532,7 @@ export default function Dashboard() {
                           registrationNumber: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                     />
                   </div>
                   <div>
@@ -546,7 +548,7 @@ export default function Dashboard() {
                           initialMileage: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       min="0"
                     />
                   </div>
@@ -571,7 +573,7 @@ export default function Dashboard() {
             </div>
 
             {/* Fixed footer with buttons */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="p-6 border-t border-gray-200 bg-gray-50 bg-opacity-70 backdrop-filter backdrop-blur-sm rounded-b-lg">
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -603,9 +605,9 @@ export default function Dashboard() {
 
       {/* Maintenance Modal */}
       {showMaintenanceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-slate-400 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white bg-opacity-90 backdrop-filter backdrop-blur-md rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col shadow-xl">
+            <div className="p-6 border-b border-gray-200 bg-white bg-opacity-70">
               <h2 className="text-xl font-semibold text-gray-800">
                 Add Maintenance Record
               </h2>
@@ -627,7 +629,7 @@ export default function Dashboard() {
                           description: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       required
                       rows={3}
                     />
@@ -646,7 +648,7 @@ export default function Dashboard() {
                             serviceProvider: e.target.value,
                           })
                         }
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       />
                     </div>
                     <div>
@@ -662,7 +664,7 @@ export default function Dashboard() {
                             mileage: e.target.value,
                           })
                         }
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                         required
                         min="0"
                       />
@@ -691,7 +693,7 @@ export default function Dashboard() {
             </div>
 
             {/* Fixed footer with buttons */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="p-6 border-t border-gray-200 bg-gray-50 bg-opacity-70 backdrop-filter backdrop-blur-sm rounded-b-lg">
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -723,9 +725,9 @@ export default function Dashboard() {
 
       {/* Report Issue Modal */}
       {showIssueModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-slate-400 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white bg-opacity-90 backdrop-filter backdrop-blur-md rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col shadow-xl">
+            <div className="p-6 border-b border-gray-200 bg-white bg-opacity-70">
               <h2 className="text-xl font-semibold text-gray-800">
                 Report Vehicle Issue
               </h2>
@@ -747,7 +749,7 @@ export default function Dashboard() {
                           issueType: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       required
                     >
                       <option value="">Select issue type</option>
@@ -771,7 +773,7 @@ export default function Dashboard() {
                           description: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white bg-opacity-80"
                       required
                       rows={3}
                     />
@@ -799,7 +801,7 @@ export default function Dashboard() {
             </div>
 
             {/* Fixed footer with buttons */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="p-6 border-t border-gray-200 bg-gray-50 bg-opacity-70 backdrop-filter backdrop-blur-sm rounded-b-lg">
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
