@@ -436,124 +436,142 @@ export default function Dashboard() {
       {/* Mint Vehicle Modal */}
       {showMintModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Add New Vehicle
-            </h2>
-            <form onSubmit={handleMintCar}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Make <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={mintFormData.make}
-                    onChange={(e) =>
-                      setMintFormData({ ...mintFormData, make: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Model <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={mintFormData.model}
-                    onChange={(e) =>
-                      setMintFormData({
-                        ...mintFormData,
-                        model: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Year <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={mintFormData.year}
-                    onChange={(e) =>
-                      setMintFormData({ ...mintFormData, year: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    min="1900"
-                    max={new Date().getFullYear()}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    VIN <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={mintFormData.vin}
-                    onChange={(e) =>
-                      setMintFormData({ ...mintFormData, vin: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Registration Number
-                  </label>
-                  <input
-                    type="text"
-                    value={mintFormData.registrationNumber}
-                    onChange={(e) =>
-                      setMintFormData({
-                        ...mintFormData,
-                        registrationNumber: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Initial Mileage
-                  </label>
-                  <input
-                    type="number"
-                    value={mintFormData.initialMileage}
-                    onChange={(e) =>
-                      setMintFormData({
-                        ...mintFormData,
-                        initialMileage: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    min="0"
-                  />
-                </div>
-              </div>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Add New Vehicle
+              </h2>
+            </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vehicle Image <span className="text-red-500">*</span>
-                </label>
-                <IPFSUpload
-                  onUploadComplete={(url) => {
-                    setMintFormData({ ...mintFormData, metadataURI: url });
-                  }}
-                />
-                {mintFormData.metadataURI && (
-                  <p className="mt-2 text-sm text-gray-500 truncate">
-                    Uploaded: {mintFormData.metadataURI}
-                  </p>
-                )}
-              </div>
+            {/* Scrollable content area */}
+            <div className="p-6 overflow-y-auto flex-grow">
+              <form onSubmit={handleMintCar}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Make <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={mintFormData.make}
+                      onChange={(e) =>
+                        setMintFormData({
+                          ...mintFormData,
+                          make: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Model <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={mintFormData.model}
+                      onChange={(e) =>
+                        setMintFormData({
+                          ...mintFormData,
+                          model: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Year <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={mintFormData.year}
+                      onChange={(e) =>
+                        setMintFormData({
+                          ...mintFormData,
+                          year: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                      min="1900"
+                      max={new Date().getFullYear()}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      VIN <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={mintFormData.vin}
+                      onChange={(e) =>
+                        setMintFormData({
+                          ...mintFormData,
+                          vin: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Registration Number
+                    </label>
+                    <input
+                      type="text"
+                      value={mintFormData.registrationNumber}
+                      onChange={(e) =>
+                        setMintFormData({
+                          ...mintFormData,
+                          registrationNumber: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Initial Mileage
+                    </label>
+                    <input
+                      type="number"
+                      value={mintFormData.initialMileage}
+                      onChange={(e) =>
+                        setMintFormData({
+                          ...mintFormData,
+                          initialMileage: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      min="0"
+                    />
+                  </div>
+                </div>
 
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vehicle Image <span className="text-red-500">*</span>
+                  </label>
+                  <IPFSUpload
+                    onUploadComplete={(url) => {
+                      setMintFormData({ ...mintFormData, metadataURI: url });
+                    }}
+                  />
+                  {mintFormData.metadataURI && (
+                    <p className="mt-2 text-sm text-gray-500 truncate">
+                      Uploaded: {mintFormData.metadataURI}
+                    </p>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Fixed footer with buttons */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -563,7 +581,8 @@ export default function Dashboard() {
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleMintCar}
                   disabled={mintLoading || !mintFormData.metadataURI}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
                 >
@@ -577,93 +596,102 @@ export default function Dashboard() {
                   )}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Add Maintenance Modal */}
+      {/* Maintenance Modal */}
       {showMaintenanceModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Add Maintenance Record
-            </h2>
-            <form onSubmit={handleAddMaintenance}>
-              <div className="space-y-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={maintenanceFormData.description}
-                    onChange={(e) =>
-                      setMaintenanceFormData({
-                        ...maintenanceFormData,
-                        description: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Add Maintenance Record
+              </h2>
+            </div>
+
+            {/* Scrollable content area */}
+            <div className="p-6 overflow-y-auto flex-grow">
+              <form id="maintenanceForm" onSubmit={handleAddMaintenance}>
+                <div className="space-y-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Service Provider
+                      Description <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={maintenanceFormData.serviceProvider}
+                    <textarea
+                      value={maintenanceFormData.description}
                       onChange={(e) =>
                         setMaintenanceFormData({
                           ...maintenanceFormData,
-                          serviceProvider: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mileage <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={maintenanceFormData.mileage}
-                      onChange={(e) =>
-                        setMaintenanceFormData({
-                          ...maintenanceFormData,
-                          mileage: e.target.value,
+                          description: e.target.value,
                         })
                       }
                       className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                       required
-                      min="0"
+                      rows={3}
                     />
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Service Provider
+                      </label>
+                      <input
+                        type="text"
+                        value={maintenanceFormData.serviceProvider}
+                        onChange={(e) =>
+                          setMaintenanceFormData({
+                            ...maintenanceFormData,
+                            serviceProvider: e.target.value,
+                          })
+                        }
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Mileage <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={maintenanceFormData.mileage}
+                        onChange={(e) =>
+                          setMaintenanceFormData({
+                            ...maintenanceFormData,
+                            mileage: e.target.value,
+                          })
+                        }
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Service Document
+                    </label>
+                    <IPFSUpload
+                      onUploadComplete={(url) => {
+                        setMaintenanceFormData({
+                          ...maintenanceFormData,
+                          documentURI: url,
+                        });
+                      }}
+                    />
+                    {maintenanceFormData.documentURI && (
+                      <p className="mt-2 text-sm text-gray-500 truncate">
+                        Uploaded: {maintenanceFormData.documentURI}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Document
-                  </label>
-                  <IPFSUpload
-                    onUploadComplete={(url) => {
-                      setMaintenanceFormData({
-                        ...maintenanceFormData,
-                        documentURI: url,
-                      });
-                    }}
-                  />
-                  {maintenanceFormData.documentURI && (
-                    <p className="mt-2 text-sm text-gray-500 truncate">
-                      Uploaded: {maintenanceFormData.documentURI}
-                    </p>
-                  )}
-                </div>
-              </div>
+              </form>
+            </div>
 
+            {/* Fixed footer with buttons */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -674,6 +702,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   type="submit"
+                  form="maintenanceForm"
                   disabled={maintenanceLoading}
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
                 >
@@ -687,7 +716,7 @@ export default function Dashboard() {
                   )}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -695,73 +724,82 @@ export default function Dashboard() {
       {/* Report Issue Modal */}
       {showIssueModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Report Vehicle Issue
-            </h2>
-            <form onSubmit={handleReportIssue}>
-              <div className="space-y-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Issue Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={issueFormData.issueType}
-                    onChange={(e) =>
-                      setIssueFormData({
-                        ...issueFormData,
-                        issueType: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Select issue type</option>
-                    <option value="Mechanical">Mechanical</option>
-                    <option value="Electrical">Electrical</option>
-                    <option value="Body Damage">Body Damage</option>
-                    <option value="Accident">Accident</option>
-                    <option value="Recall">Recall</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={issueFormData.description}
-                    onChange={(e) =>
-                      setIssueFormData({
-                        ...issueFormData,
-                        description: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Evidence (Photos/Documents)
-                  </label>
-                  <IPFSUpload
-                    onUploadComplete={(url) => {
-                      setIssueFormData({
-                        ...issueFormData,
-                        evidenceURI: url,
-                      });
-                    }}
-                  />
-                  {issueFormData.evidenceURI && (
-                    <p className="mt-2 text-sm text-gray-500 truncate">
-                      Uploaded: {issueFormData.evidenceURI}
-                    </p>
-                  )}
-                </div>
-              </div>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Report Vehicle Issue
+              </h2>
+            </div>
 
+            {/* Scrollable content area */}
+            <div className="p-6 overflow-y-auto flex-grow">
+              <form id="issueForm" onSubmit={handleReportIssue}>
+                <div className="space-y-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Issue Type <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={issueFormData.issueType}
+                      onChange={(e) =>
+                        setIssueFormData({
+                          ...issueFormData,
+                          issueType: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Select issue type</option>
+                      <option value="Mechanical">Mechanical</option>
+                      <option value="Electrical">Electrical</option>
+                      <option value="Body Damage">Body Damage</option>
+                      <option value="Accident">Accident</option>
+                      <option value="Recall">Recall</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={issueFormData.description}
+                      onChange={(e) =>
+                        setIssueFormData({
+                          ...issueFormData,
+                          description: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Evidence (Photos/Documents)
+                    </label>
+                    <IPFSUpload
+                      onUploadComplete={(url) => {
+                        setIssueFormData({
+                          ...issueFormData,
+                          evidenceURI: url,
+                        });
+                      }}
+                    />
+                    {issueFormData.evidenceURI && (
+                      <p className="mt-2 text-sm text-gray-500 truncate">
+                        Uploaded: {issueFormData.evidenceURI}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* Fixed footer with buttons */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -772,6 +810,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   type="submit"
+                  form="issueForm"
                   disabled={issueLoading}
                   className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors disabled:bg-yellow-400 disabled:cursor-not-allowed"
                 >
@@ -785,7 +824,7 @@ export default function Dashboard() {
                   )}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
