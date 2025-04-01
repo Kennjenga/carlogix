@@ -6,6 +6,8 @@ import { useCarInsuranceData } from "@/blockchain/hooks/useCarInsurance";
 import {
   useMemberPools,
   // usePoolDetails,
+  fetchAllPools,
+  // useDefaultAdminRole,
 } from "@/blockchain/hooks/useContractReads";
 import { useAccount } from "wagmi";
 import {
@@ -67,6 +69,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
   const [pools, setPools] = useState<PoolData[]>([]);
   const [fetchingPools, setFetchingPools] = useState<boolean>(true);
   const [poolsError, setPoolsError] = useState<Error | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   // UI states
   const [showJoinForm, setShowJoinForm] = useState<boolean>(false);
@@ -86,11 +89,14 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
     maxCoverage: "1",
   });
 
-  // Get the pools that the user is a member of
+  // Get member pools data
   const { data: memberPoolIds, isLoading: loadingMemberPools } = useMemberPools(
     address,
     296
-  ) as { data: string[] | undefined; isLoading: boolean };
+  ) as {
+    data: bigint[] | undefined;
+    isLoading: boolean;
+  };
 
   // Effect to set the selected car for pool when selectedCar changes
   useEffect(() => {
@@ -110,178 +116,32 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
 
       try {
         setFetchingPools(true);
+        console.log("Fetching pools for address:", address);
 
-        // Check if the contract directly provides a method to get pool count
-        const fetchPoolCount = async () => {
-          try {
-            // This will fail if the method doesn't exist, and we'll catch it below
-            return (await publicClient.readContract({
-              address: carinsurance_address as Address,
-              abi: carinsurance_abi,
-              functionName: "getPoolCount",
-            })) as bigint;
-          } catch (error) {
-            console.log("getPoolCount method not available", error);
-            return undefined;
-          }
-        };
+        // Use the new fetchAllPools function to get all pools
+        const allPools = await fetchAllPools();
+        console.log("All available pools:", allPools);
 
-        const poolCount = await fetchPoolCount();
-        const fetchedPools: PoolData[] = [];
-
-        if (poolCount !== undefined) {
-          // If we have a pool count, we can iterate through each pool
-          console.log(`Fetching ${poolCount} pools`);
-
-          for (let i = 1; i <= Number(poolCount); i++) {
-            try {
-              const poolDetails = await publicClient.readContract({
-                address: carinsurance_address as Address,
-                abi: carinsurance_abi,
-                functionName: "getPoolDetails",
-                args: [BigInt(i)],
-              });
-
-              if (poolDetails) {
-                // Process pool details based on the contract's return structure
-                // The poolDetails structure should match the InsurancePool struct in the contract
-                const pool = poolDetails as {
-                  name: string;
-                  description: string;
-                  minContribution: bigint;
-                  maxCoverage: bigint;
-                  totalFunds: bigint;
-                  memberCount: number;
-                };
-                fetchedPools.push({
-                  id: i.toString(),
-                  name: pool.name || `Pool ${i}`, // name
-                  description:
-                    pool.description || "Insurance pool for vehicles", // description
-                  minContribution:
-                    pool.minContribution || BigInt(50000000000000000), // minContribution (0.05 ETH)
-                  maxCoverage: pool.maxCoverage || BigInt(1000000000000000000), // maxCoverage (1 ETH)
-                  totalFunds: pool.totalFunds || BigInt(0), // totalBalance
-                  memberCount: pool.memberCount || 0, // memberCount
-                });
-              }
-            } catch (error) {
-              console.error(`Error fetching pool ${i}:`, error);
+        // If we have member pool IDs, we can mark which pools the user is a member of
+        if (memberPoolIds && memberPoolIds.length > 0) {
+          const memberPoolIdSet = new Set(
+            memberPoolIds.map((id) => id.toString())
+          );
+          allPools.forEach((pool) => {
+            if (pool) {
+              // Add the isMember property to the pool object
+              (pool as typeof pool & { isMember: boolean }).isMember =
+                memberPoolIdSet.has(pool.id);
             }
-          }
-        } else {
-          // If no pool count method is available, we need an alternative approach
-          // Check if the user is already a member of some pools
-          if (memberPoolIds && memberPoolIds.length > 0) {
-            // Fetch details for each pool the user is a member of
-            for (const poolId of memberPoolIds) {
-              try {
-                const poolDetails = await publicClient.readContract({
-                  address: carinsurance_address as Address,
-                  abi: carinsurance_abi,
-                  functionName: "getPoolDetails",
-                  args: [poolId],
-                });
-
-                if (poolDetails) {
-                  const pool = poolDetails as {
-                    name: string;
-                    description: string;
-                    minContribution: bigint;
-                    maxCoverage: bigint;
-                    totalFunds: bigint;
-                    memberCount: number;
-                  };
-                  fetchedPools.push({
-                    id: poolId.toString(),
-                    name: pool.name || `Pool ${poolId}`,
-                    description:
-                      pool.description || "Insurance pool for vehicles",
-                    minContribution:
-                      pool.minContribution || BigInt(50000000000000000),
-                    maxCoverage:
-                      pool.maxCoverage || BigInt(1000000000000000000),
-                    totalFunds: pool.totalFunds || BigInt(0),
-                    memberCount: pool.memberCount || 0,
-                  });
-                }
-              } catch (error) {
-                console.error(`Error fetching member pool ${poolId}:`, error);
-              }
-            }
-          } else {
-            // If the user is not a member of any pools, check the last poolId from events
-            // This assumes the poolIds are sequential starting from 1
-
-            // Set some pools for demonstration if we can't get real ones
-            // But first try to use the lastPoolCreatedEvent
-            if (carInsurance.lastPoolCreatedEvent) {
-              const lastPoolId = Number(
-                carInsurance.lastPoolCreatedEvent.poolId
-              );
-
-              // Try to fetch all pools up to the last known ID
-              for (let i = 1; i <= lastPoolId; i++) {
-                try {
-                  const poolDetails = await publicClient.readContract({
-                    address: carinsurance_address as Address,
-                    abi: carinsurance_abi,
-                    functionName: "getPoolDetails",
-                    args: [BigInt(i)],
-                  });
-
-                  if (poolDetails) {
-                    const pool = poolDetails as {
-                      name: string;
-                      description: string;
-                      minContribution: bigint;
-                      maxCoverage: bigint;
-                      totalFunds: bigint;
-                      memberCount: number;
-                    };
-                    fetchedPools.push({
-                      id: i.toString(),
-                      name: pool.name || `Pool ${i}`,
-                      description:
-                        pool.description || "Insurance pool for vehicles",
-                      minContribution:
-                        pool.minContribution || BigInt(50000000000000000),
-                      maxCoverage:
-                        pool.maxCoverage || BigInt(1000000000000000000),
-                      totalFunds: pool.totalFunds || BigInt(0),
-                      memberCount: pool.memberCount || 0,
-                    });
-                  }
-                } catch (error) {
-                  console.error(`Error fetching pool ${i}:`, error);
-                }
-              }
-            }
-
-            // If we still don't have any pools, create mock data for demonstration
-            if (fetchedPools.length === 0) {
-              console.log("Creating demo pools as no real pools found");
-              for (let i = 1; i <= 3; i++) {
-                fetchedPools.push({
-                  id: i.toString(),
-                  name: `Insurance Pool ${i}`,
-                  description:
-                    i === 1
-                      ? "Basic coverage for most vehicles"
-                      : i === 2
-                      ? "Enhanced coverage for luxury vehicles"
-                      : "Premium coverage with additional benefits",
-                  minContribution: BigInt(i * 50000000000000000), // 0.05 * i ETH
-                  maxCoverage: BigInt(i * 1000000000000000000), // i ETH
-                  memberCount: 10 + i * 5,
-                  totalFunds: BigInt((20 + i * 15) * 1000000000000000000),
-                });
-              }
-            }
-          }
+          });
         }
-
-        setPools(fetchedPools);
+        // Filter out null values before setting pools
+        setPools(
+          allPools.filter(
+            (pool): pool is typeof pool & { isMember?: boolean } =>
+              pool !== null
+          )
+        );
       } catch (error) {
         console.error("Error fetching pools:", error);
         setPoolsError(
@@ -293,7 +153,45 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
     };
 
     fetchAvailablePools();
-  }, [address, memberPoolIds, carInsurance.lastPoolCreatedEvent]);
+  }, [address, memberPoolIds]);
+
+  // Check if the current user is an admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!address) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        // Get the DEFAULT_ADMIN_ROLE from the contract
+        const defaultAdminRoleResult = await publicClient.readContract({
+          address: carinsurance_address as Address,
+          abi: carinsurance_abi,
+          functionName: "DEFAULT_ADMIN_ROLE",
+        });
+
+        const defaultAdminRole = defaultAdminRoleResult as string;
+        console.log("DEFAULT_ADMIN_ROLE:", defaultAdminRole);
+
+        // Check if the user has the admin role
+        const adminStatus = await publicClient.readContract({
+          address: carinsurance_address as Address,
+          abi: carinsurance_abi,
+          functionName: "hasRole",
+          args: [defaultAdminRole, address],
+        });
+
+        setIsAdmin(!!adminStatus);
+        console.log("User is admin:", !!adminStatus);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [address]);
 
   // Handle pool creation event
   useEffect(() => {
@@ -378,25 +276,154 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
     }
   }, [carInsurance.lastPoolCreatedEvent, pools]);
 
+  // Add this effect to poll for updates
+  useEffect(() => {
+    if (!address) return;
+
+    // Initial fetch
+    const fetchPools = async () => {
+      try {
+        setFetchingPools(true);
+        const allPools = await fetchAllPools();
+
+        // Get the pools the user is a member of
+        let userMemberPools: bigint[] = [];
+        try {
+          if (address) {
+            const memberPoolsResult = await publicClient.readContract({
+              address: carinsurance_address as Address,
+              abi: carinsurance_abi,
+              functionName: "getMemberPools",
+              args: [address],
+            });
+            userMemberPools = (memberPoolsResult as bigint[]) || [];
+          }
+        } catch (error) {
+          console.error("Error fetching member pools:", error);
+          userMemberPools = [];
+        }
+
+        // Create a Set of pool IDs the user is a member of for faster lookups
+        const memberPoolIdSet = new Set(
+          userMemberPools.map((id) => id.toString())
+        );
+
+        // Add the isMember property to each pool
+        const poolsWithMembership = allPools.map((pool) => ({
+          ...pool,
+          isMember: memberPoolIdSet.has(pool.id),
+        }));
+
+        setPools(poolsWithMembership);
+      } catch (error) {
+        console.error("Error in polling fetch:", error);
+        setPoolsError(error as Error);
+      } finally {
+        setFetchingPools(false);
+      }
+    };
+
+    fetchPools();
+
+    // Set up polling every 30 seconds
+    const intervalId = setInterval(fetchPools, 30000);
+
+    // Clean up on unmount
+    return () => clearInterval(intervalId);
+  }, [address]);
+
   // Handle joining a pool
   const handleJoinPool = async () => {
-    if (!selectedPool || !selectedCarForPool || !contributionAmount) return;
+    if (!selectedPool || !selectedCarForPool || !contributionAmount) {
+      console.error("Missing required data for joining pool:", {
+        selectedPool,
+        selectedCarForPool,
+        contributionAmount,
+      });
+      alert("Please select a pool, car, and enter a contribution amount.");
+      return;
+    }
 
     try {
       setLoading(true);
 
-      await carInsurance.joinPool(
-        BigInt(selectedPool),
-        BigInt(selectedCarForPool),
-        // Convert ETH to Wei (or whatever the native token is)
-        BigInt(parseFloat(contributionAmount) * 10 ** 18)
+      // Convert ETH to Wei (or whatever the native token is)
+      const contributionInWei = BigInt(
+        Math.floor(parseFloat(contributionAmount) * 10 ** 18)
       );
 
-      setShowJoinForm(false);
-      setSelectedPool(null);
-      setContributionAmount("");
+      console.log("Joining pool with parameters:", {
+        poolId: selectedPool,
+        carId: selectedCarForPool,
+        contribution: contributionInWei.toString(),
+        contributionInEth: contributionAmount,
+      });
+
+      // First, check if the contract needs approval to transfer funds
+      const txHash = await carInsurance.joinPool(
+        BigInt(selectedPool),
+        BigInt(selectedCarForPool),
+        contributionInWei
+      );
+
+      console.log("Join pool transaction submitted:", txHash);
+
+      // Wait for the transaction to be confirmed
+      alert("Transaction submitted! Please wait for confirmation.");
+
+      // After joining, update the pools to reflect membership
+      // We'll do a full refresh to ensure data consistency
+      setTimeout(async () => {
+        try {
+          // Get the updated list of pools the user is a member of
+          const memberPoolsResult = await publicClient.readContract({
+            address: carinsurance_address as Address,
+            abi: carinsurance_abi,
+            functionName: "getMemberPools",
+            args: [address as Address],
+          });
+
+          const userMemberPools = (memberPoolsResult as bigint[]) || [];
+          const memberPoolIdSet = new Set(
+            userMemberPools.map((id) => id.toString())
+          );
+
+          // Update the pools with the new membership status
+          const updatedPools = pools.map((pool) => {
+            if (pool.id === selectedPool) {
+              return {
+                ...pool,
+                isMember: true,
+                memberCount: (pool.memberCount ?? 0) + 1,
+                totalFunds: (pool.totalFunds ?? BigInt(0)) + contributionInWei,
+              };
+            }
+            return {
+              ...pool,
+              isMember: memberPoolIdSet.has(pool.id),
+            };
+          });
+
+          setPools(updatedPools);
+          console.log("Pools updated after joining:", updatedPools);
+
+          // Reset the form
+          setShowJoinForm(false);
+          setSelectedPool(null);
+          setContributionAmount("");
+
+          alert("Successfully joined the pool!");
+        } catch (error) {
+          console.error("Error updating pools after joining:", error);
+        }
+      }, 5000); // Wait 5 seconds for the transaction to be processed
     } catch (error) {
       console.error("Error joining pool:", error);
+      alert(
+        `Failed to join pool: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setLoading(false);
     }
@@ -456,12 +483,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
     return (Number(value) / 10 ** 18).toFixed(4);
   };
 
-  if (
-    parentLoading ||
-    // membershipLoading || (removed as it is undefined)
-    fetchingPools ||
-    loadingMemberPools
-  ) {
+  if (parentLoading || fetchingPools || loadingMemberPools) {
     return (
       <div className="flex justify-center py-8">
         <Loader size={24} className="animate-spin text-blue-600" />
@@ -502,24 +524,26 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
               </h3>
               <div className="mt-2 text-sm text-yellow-700">
                 <p>
-                  You are not a member of any insurance pools yet. Create a new
-                  pool or check back later.
+                  No insurance pools are currently available on the blockchain.
+                  {isAdmin && " As an admin, you can create a new pool below."}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Create Pool Button */}
-        <div className="flex justify-center">
-          <button
-            onClick={() => setShowCreatePoolForm(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <Plus size={16} className="mr-2" />
-            Create New Insurance Pool
-          </button>
-        </div>
+        {/* Create Pool Button - visible to admins even when no pools exist */}
+        {isAdmin && (
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => setShowCreatePoolForm(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <Plus size={16} className="mr-2" />
+              Create New Insurance Pool
+            </button>
+          </div>
+        )}
 
         {/* Create Pool Form */}
         {showCreatePoolForm && (
@@ -666,16 +690,18 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Create Pool Button */}
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setShowCreatePoolForm(true)}
-          className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <Plus size={14} className="mr-1" />
-          Create New Pool
-        </button>
-      </div>
+      {/* Create Pool Button - only visible to admins */}
+      {isAdmin && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setShowCreatePoolForm(true)}
+            className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <Plus size={14} className="mr-1" />
+            Create New Pool
+          </button>
+        </div>
+      )}
 
       {/* Pools list */}
       <div className="border border-gray-200 rounded-md overflow-hidden">
@@ -856,143 +882,6 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                 </>
               )}
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Create Pool Form */}
-      {showCreatePoolForm && (
-        <div className="border border-gray-200 rounded-lg shadow-sm bg-gray-50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-100">
-            <h3 className="text-lg font-medium text-gray-900">
-              Create New Insurance Pool
-            </h3>
-          </div>
-          <div className="px-4 py-4">
-            <form onSubmit={handleCreatePool}>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="poolName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Pool Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="poolName"
-                    type="text"
-                    value={poolFormData.name}
-                    onChange={(e) =>
-                      setPoolFormData({ ...poolFormData, name: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="poolDescription"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Description <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    id="poolDescription"
-                    rows={3}
-                    value={poolFormData.description}
-                    onChange={(e) =>
-                      setPoolFormData({
-                        ...poolFormData,
-                        description: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="minContribution"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Minimum Contribution (ETH){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="minContribution"
-                      type="number"
-                      min="0.001"
-                      step="0.001"
-                      value={poolFormData.minContribution}
-                      onChange={(e) =>
-                        setPoolFormData({
-                          ...poolFormData,
-                          minContribution: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="maxCoverage"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Maximum Coverage (ETH){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="maxCoverage"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={poolFormData.maxCoverage}
-                      onChange={(e) =>
-                        setPoolFormData({
-                          ...poolFormData,
-                          maxCoverage: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreatePoolForm(false)}
-                  className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`inline-flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                    loading
-                      ? "bg-blue-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <Loader size={16} className="animate-spin mr-2" />
-                      Creating...
-                    </>
-                  ) : (
-                    "Create Pool"
-                  )}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

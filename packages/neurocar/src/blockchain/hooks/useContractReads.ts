@@ -320,3 +320,100 @@ export function useAssessorDetails(assessorAddress: Address | undefined, chainId
     }
   })
 }
+
+// Get pool count
+export function usePoolCount(chainId: number = 296) {
+  return useReadContract({
+    address: carinsurance_address as Address,
+    abi: carinsurance_abi,
+    functionName: 'getPoolCount',
+    chainId,
+  })
+}
+
+// Fetch all active pools
+export async function fetchAllPools() {
+  try {
+    console.log("Fetching all active pools...");
+    
+    // Since Hedera limits log queries to 7 days, we'll use a sequential approach
+    const pools = [];
+    let poolId = 1;
+    const MAX_POOLS_TO_CHECK = 10; // Safety limit
+    let consecutiveFailures = 0;
+    const MAX_CONSECUTIVE_FAILURES = 3; // Stop after 3 consecutive failures
+    
+    // Try to fetch pools one by one until we get too many consecutive errors
+    for (let i = 0; i < MAX_POOLS_TO_CHECK && consecutiveFailures < MAX_CONSECUTIVE_FAILURES; i++) {
+      try {
+        console.log(`Checking if pool ${poolId} exists...`);
+        
+        const poolDetails = await publicClient.readContract({
+          address: carinsurance_address as Address,
+          abi: carinsurance_abi,
+          functionName: 'getPoolDetails',
+          args: [BigInt(poolId)]
+        });
+        
+        if (poolDetails) {
+          console.log(`Found pool ${poolId}:`, poolDetails);
+          
+          // Process the pool data
+          const poolData = poolDetails as {
+            name?: string;
+            description?: string;
+            minContribution?: bigint;
+            maxCoverage?: bigint;
+            totalBalance?: bigint;
+            memberCount?: number;
+            createdAt?: bigint;
+            active?: boolean;
+          };
+          
+          // Only add the pool if it's active
+          if (poolData.active) {
+            pools.push({
+              id: poolId.toString(),
+              name: poolData.name || `Pool ${poolId}`,
+              description: poolData.description || "Insurance pool for vehicles",
+              minContribution: poolData.minContribution || BigInt(0),
+              maxCoverage: poolData.maxCoverage || BigInt(0),
+              totalFunds: poolData.totalBalance || BigInt(0),
+              memberCount: poolData.memberCount || 0,
+              createdAt: poolData.createdAt || BigInt(0),
+              active: true
+            });
+          } else {
+            console.log(`Pool ${poolId} exists but is inactive, skipping`);
+          }
+          
+          // Reset consecutive failures counter since we found a pool
+          consecutiveFailures = 0;
+          
+          // Move to the next pool ID
+          poolId++;
+        } else {
+          // If we get a null result, we've reached the end of the pools
+          console.log(`No more pools found after ${poolId-1}`);
+          break;
+        }
+      } catch (error) {
+        // If we get an error for this pool ID, it might not exist
+        console.log(`Error checking pool ${poolId}:`, error);
+        consecutiveFailures++;
+        poolId++;
+        
+        // If this is the first pool and it doesn't exist, there are no pools
+        if (poolId === 1) {
+          return [];
+        }
+      }
+    }
+    
+    console.log(`Fetched ${pools.length} active pools`);
+    return pools;
+  } catch (error) {
+    console.error("Error fetching all pools:", error);
+    throw error;
+  }
+}

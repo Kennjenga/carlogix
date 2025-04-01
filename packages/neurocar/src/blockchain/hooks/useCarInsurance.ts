@@ -295,21 +295,36 @@ export function useCarInsuranceData(chainId: number = 296) {
     })
   }
 
+  // Join an insurance pool
   const joinPool = async (
     poolId: bigint | number,
     tokenId: bigint | number,
-    contributionAmount: bigint | number
+    contribution: bigint | number
   ) => {
-    if (!address) throw new Error('Wallet not connected')
+    if (!address) throw new Error('Wallet not connected');
 
-    return writeContract({
-      address: carinsurance_address as Address,
-      abi: carinsurance_abi,
-      functionName: 'joinPool',
-      args: [BigInt(poolId), BigInt(tokenId)],
-      value: BigInt(contributionAmount),
-      chainId,
-    })
+    console.log("Joining pool with parameters:", {
+      poolId: BigInt(poolId).toString(),
+      tokenId: BigInt(tokenId).toString(),
+      contribution: BigInt(contribution).toString()
+    });
+
+    try {
+      const tx = await writeContract({
+        address: carinsurance_address as Address,
+        abi: carinsurance_abi,
+        functionName: 'joinPool',
+        args: [BigInt(poolId), BigInt(tokenId)],
+        value: BigInt(contribution),
+        chainId,
+      });
+      
+      console.log("Join pool transaction hash:", tx);
+      return tx;
+    } catch (error) {
+      console.error("Error in joinPool contract call:", error);
+      throw error;
+    }
   }
 
   const leavePool = async (poolId: bigint | number) => {

@@ -821,7 +821,7 @@ export const carnft_abi = [
   }
 ]
 
-export const carnft_address = "0x2ae495E8D1c6331FCC2046BE8A91B45D758637FE"
+export const carnft_address = "0xa857caf075Cb9060e4C9B589ff2Df43731e0EB32"
 
 export const carinsurance_abi = [
   {
@@ -1834,4 +1834,4 @@ export const carinsurance_abi = [
   }
 ]
 
-export const carinsurance_address = "0x338FA4C12De8a4bf9E6c7DEF28F2F56ee71034bE"
+export const carinsurance_address = "0xbb760e2ad9c6DAD676be1414b53a874b92dD82bf"

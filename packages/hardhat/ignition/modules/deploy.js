@@ -38,3 +38,9 @@ main()
 // CarNFT deployed to: 0x2ae495E8D1c6331FCC2046BE8A91B45D758637FE
 // CarInsurancePool deployed to: 0x338FA4C12De8a4bf9E6c7DEF28F2F56ee71034bE
 // Deployment complete!
+
+// Deploying contracts to Hedera Testnet...
+// Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
+// CarNFT deployed to: 0xa857caf075Cb9060e4C9B589ff2Df43731e0EB32
+// CarInsurancePool deployed to: 0xbb760e2ad9c6DAD676be1414b53a874b92dD82bf
+// Deployment complete!
