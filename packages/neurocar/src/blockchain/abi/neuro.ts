@@ -821,7 +821,8 @@ export const carnft_abi = [
   }
 ]
 
-export const carnft_address = "0xa857caf075Cb9060e4C9B589ff2Df43731e0EB32"
+
+export const carnft_address = "0x3FcE4b297fc4F46eab18b61258657C26a2e22c41"
 
 export const carinsurance_abi = [
   {
@@ -834,6 +835,31 @@ export const carinsurance_abi = [
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "poolId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "AdditionalContribution",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -877,6 +903,19 @@ export const carinsurance_abi = [
       }
     ],
     "name": "AssessorRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "assessor",
+        "type": "address"
+      }
+    ],
+    "name": "AssessorRoleRevoked",
     "type": "event"
   },
   {
@@ -1208,6 +1247,19 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "poolId",
+        "type": "uint256"
+      }
+    ],
+    "name": "contributeToPool",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "name",
         "type": "string"
@@ -1263,7 +1315,13 @@ export const carinsurance_abi = [
       }
     ],
     "name": "fileClaim",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1475,6 +1533,52 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "poolId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      }
+    ],
+    "name": "getMemberContributionHistory",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "poolId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "contributionType",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct CarInsurancePool.ContributionRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "member",
         "type": "address"
@@ -1630,6 +1734,49 @@ export const carinsurance_abi = [
         "type": "bytes32"
       },
       {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRoleMember",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleMemberCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -1752,6 +1899,19 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "assessor",
+        "type": "address"
+      }
+    ],
+    "name": "revokeAssessorRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -1834,4 +1994,16 @@ export const carinsurance_abi = [
   }
 ]
 
-export const carinsurance_address = "0xbb760e2ad9c6DAD676be1414b53a874b92dD82bf"
+export const carinsurance_address = "0x473287848ac34aCb084248ECb54Cd2a1790F036c"
+
+
+// useinsurance hooks
+// Deploying contracts to Hedera Testnet...
+// Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
+// CarNFT deployed to: 0x3FcE4b297fc4F46eab18b61258657C26a2e22c41
+// CarInsurancePool deployed to: 0x473287848ac34aCb084248ECb54Cd2a1790F036c
+// Deployment complete!
+
+// drop back
+// export const carnft_address = "0xa857caf075Cb9060e4C9B589ff2Df43731e0EB32"
+// export const carinsurance_address = "0xbb760e2ad9c6DAD676be1414b53a874b92dD82bf"

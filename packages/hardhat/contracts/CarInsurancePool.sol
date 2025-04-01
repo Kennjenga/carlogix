@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./CarNFT.sol";
@@ -10,7 +10,7 @@ import "./CarNFT.sol";
  * @title CarInsurancePool
  * @dev Contract for managing decentralized car insurance pools with certified assessors
  */
-contract CarInsurancePool is AccessControl, ReentrancyGuard {
+contract CarInsurancePool is AccessControlEnumerable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     // Role definitions
@@ -92,6 +92,14 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
         string rejectionReason;
     }
 
+    // Struct for contribution record
+    struct ContributionRecord {
+        uint256 timestamp;
+        uint256 amount;
+        uint256 poolId;
+        string contributionType; // "Initial", "Monthly", etc.
+    }
+
     // Mapping from address to assessor details
     mapping(address => Assessor) private _assessors;
 
@@ -116,6 +124,10 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
 
     // Mapping from tokenId to array of claim IDs
     mapping(uint256 => uint256[]) private _tokenClaims;
+
+    // Mapping from pool ID to member address to contribution records
+    mapping(uint256 => mapping(address => ContributionRecord[]))
+        private _contributionRecords;
 
     // Events
     event PoolCreated(uint256 indexed poolId, string name, address creator);
@@ -150,6 +162,12 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
         address indexed recipient,
         uint256 amount
     );
+    event AdditionalContribution(
+        uint256 indexed poolId,
+        address indexed member,
+        uint256 amount
+    );
+    event AssessorRoleRevoked(address indexed assessor);
 
     /**
      * @dev Constructor
@@ -193,28 +211,37 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
     }
 
     /**
-     * @dev Set the active status of an assessor
+     * @dev Set the status of an assessor (active or inactive)
      * @param assessor Address of the assessor
-     * @param active New active status
+     * @param active Whether the assessor should be active
      */
     function setAssessorStatus(
         address assessor,
         bool active
     ) public onlyRole(ADMIN_ROLE) {
-        require(
-            _assessors[assessor].registeredAt > 0,
-            "Assessor not registered"
-        );
+        require(hasRole(ASSESSOR_ROLE, assessor), "Not an assessor");
 
-        _assessors[assessor].active = active;
-
-        if (active) {
-            _grantRole(ASSESSOR_ROLE, assessor);
-        } else {
-            _revokeRole(ASSESSOR_ROLE, assessor);
-        }
+        Assessor storage assessorData = _assessors[assessor];
+        assessorData.active = active;
 
         emit AssessorStatusChanged(assessor, active);
+    }
+
+    /**
+     * @dev Revoke assessor role completely
+     * @param assessor Address of the assessor to revoke
+     */
+    function revokeAssessorRole(address assessor) public onlyRole(ADMIN_ROLE) {
+        require(hasRole(ASSESSOR_ROLE, assessor), "Not an assessor");
+
+        // Revoke the role
+        revokeRole(ASSESSOR_ROLE, assessor);
+
+        // Update the assessor's status
+        Assessor storage assessorData = _assessors[assessor];
+        assessorData.active = false;
+
+        emit AssessorRoleRevoked(assessor);
     }
 
     /**
@@ -320,6 +347,16 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
         // Update pool balance
         pool.totalBalance += msg.value;
 
+        // Record the initial contribution
+        _contributionRecords[poolId][msg.sender].push(
+            ContributionRecord({
+                timestamp: block.timestamp,
+                amount: msg.value,
+                poolId: poolId,
+                contributionType: "Initial"
+            })
+        );
+
         emit MemberJoined(poolId, msg.sender, tokenId, msg.value);
     }
 
@@ -335,7 +372,7 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
         uint256 amount,
         string memory description,
         string memory evidenceURI
-    ) public nonReentrant {
+    ) public nonReentrant returns (uint256) {
         InsurancePool storage pool = _insurancePools[poolId];
         require(pool.active, "Pool is not active");
 
@@ -362,11 +399,25 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
         _claimIds.increment();
         uint256 newClaimId = _claimIds.current();
 
+        // Get the member's contribution percentage of the pool
+        uint256 contributionPercentage = (membership.contribution * 100) /
+            pool.totalBalance;
+
+        // Calculate the claim amount based on contribution percentage and pool balance
+        uint256 claimAmount = (contributionPercentage * pool.totalBalance) /
+            100;
+
+        // Cap the claim amount based on coverage limit and requested amount
+        uint256 maxClaimAmount = (claimAmount < membership.coverageLimit)
+            ? claimAmount
+            : membership.coverageLimit;
+        maxClaimAmount = (maxClaimAmount < amount) ? maxClaimAmount : amount;
+
         _insuranceClaims[newClaimId] = InsuranceClaim({
             poolId: poolId,
             tokenId: tokenId,
             claimant: msg.sender,
-            amount: amount,
+            amount: maxClaimAmount,
             description: description,
             evidenceURI: evidenceURI,
             createdAt: block.timestamp,
@@ -379,7 +430,12 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
 
         _tokenClaims[tokenId].push(newClaimId);
 
+        // Store the contribution-adjusted amount
+        _insuranceClaims[newClaimId].amount = maxClaimAmount;
+
         emit ClaimFiled(newClaimId, poolId, msg.sender, description);
+
+        return newClaimId;
     }
 
     /**
@@ -611,14 +667,75 @@ contract CarInsurancePool is AccessControl, ReentrancyGuard {
         InsurancePool storage pool = _insurancePools[poolId];
         pool.memberCount--;
 
-        // Return partial contribution (example: 70% refund)
-        uint256 refundAmount = (membership.contribution * 70) / 100;
+        // Calculate refund amount (95% of contribution)
+        uint256 refundAmount = (membership.contribution * 95) / 100;
+
+        // Calculate admin fee (5% of contribution)
+        uint256 adminFee = membership.contribution - refundAmount;
+
         if (refundAmount > 0 && refundAmount <= pool.totalBalance) {
-            pool.totalBalance -= refundAmount;
-            (bool success, ) = payable(msg.sender).call{value: refundAmount}(
-                ""
-            );
-            require(success, "Refund transfer failed");
+            pool.totalBalance -= membership.contribution;
+
+            // Transfer refund to member
+            (bool successRefund, ) = payable(msg.sender).call{
+                value: refundAmount
+            }("");
+            require(successRefund, "Refund transfer failed");
+
+            // Transfer fee to admin
+            (bool successFee, ) = payable(
+                this.getRoleMember(DEFAULT_ADMIN_ROLE, 0)
+            ).call{value: adminFee}("");
+            require(successFee, "Admin fee transfer failed");
         }
+    }
+
+    /**
+     * @dev Make an additional contribution to a pool you're already a member of
+     * @param poolId ID of the pool to contribute to
+     */
+    function contributeToPool(uint256 poolId) public payable nonReentrant {
+        require(_insurancePools[poolId].active, "Pool is not active");
+
+        PoolMembership storage membership = _poolMemberships[poolId][
+            msg.sender
+        ];
+        require(membership.active, "Not a member of this pool");
+
+        // Update the pool balance
+        _insurancePools[poolId].totalBalance += msg.value;
+
+        // Update the member's contribution
+        membership.contribution += msg.value;
+
+        // Update coverage limit based on new contribution
+        membership.coverageLimit =
+            (membership.contribution * _insurancePools[poolId].maxCoverage) /
+            _insurancePools[poolId].minContribution;
+
+        // Record the contribution
+        _contributionRecords[poolId][msg.sender].push(
+            ContributionRecord({
+                timestamp: block.timestamp,
+                amount: msg.value,
+                poolId: poolId,
+                contributionType: "Monthly"
+            })
+        );
+
+        // Emit an event for the contribution
+        emit AdditionalContribution(poolId, msg.sender, msg.value);
+    }
+
+    /**
+     * @dev Get contribution history for a member
+     * @param poolId ID of the pool
+     * @param member Address of the member
+     */
+    function getMemberContributionHistory(
+        uint256 poolId,
+        address member
+    ) public view returns (ContributionRecord[] memory) {
+        return _contributionRecords[poolId][member];
     }
 }

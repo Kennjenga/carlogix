@@ -118,17 +118,49 @@ export function useCarNFTData(chainId: number = 296) {
     model: string,
     year: bigint | number,
     registrationNumber: string,
-    metadataURI: string
+    ipfsURI: string // Expecting raw ipfs:// URI
   ) => {
     if (!address) throw new Error('Wallet not connected');
-
+  
+    // Convert to HTTPS gateway URL for wallet compatibility
+    const gatewayURI = convertIpfsToGatewayUrl(ipfsURI);
+  
     return await writeContractAsync({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'mintCar',
-      args: [to, vin, make, model, BigInt(year), registrationNumber, metadataURI],
+      args: [
+        to, 
+        vin, 
+        make, 
+        model, 
+        BigInt(year), 
+        registrationNumber, 
+        gatewayURI // Using gateway URL for minting
+      ],
       chainId,
     });
+  };
+  
+  // Helper function to handle IPFS URI conversion
+  const convertIpfsToGatewayUrl = (ipfsUri: string): string => {
+    // List of reliable public gateways (fallback system)
+    const gateways = [
+      'https://ipfs.io/ipfs/',
+      'https://gateway.ipfs.io/ipfs/',
+      'https://cloudflare-ipfs.com/ipfs/',
+      'https://dweb.link/ipfs/'
+    ];
+  
+    if (!ipfsUri.startsWith('ipfs://')) {
+      console.warn('URI is not in ipfs:// format, using as-is');
+      return ipfsUri;
+    }
+  
+    const cidPath = ipfsUri.replace('ipfs://', '');
+    
+    // Return the first gateway URL
+    return `${gateways[0]}${cidPath}`;
   };
 
   // Add a maintenance record to a car

@@ -299,14 +299,14 @@ export function useCarInsuranceData(chainId: number = 296) {
   const joinPool = async (
     poolId: bigint | number,
     tokenId: bigint | number,
-    contribution: bigint | number
+    initialContribution: bigint | number
   ) => {
     if (!address) throw new Error('Wallet not connected');
 
-    console.log("Joining pool with parameters:", {
+    console.log("Car joining pool with parameters:", {
       poolId: BigInt(poolId).toString(),
       tokenId: BigInt(tokenId).toString(),
-      contribution: BigInt(contribution).toString()
+      initialContribution: BigInt(initialContribution).toString()
     });
 
     try {
@@ -315,11 +315,11 @@ export function useCarInsuranceData(chainId: number = 296) {
         abi: carinsurance_abi,
         functionName: 'joinPool',
         args: [BigInt(poolId), BigInt(tokenId)],
-        value: BigInt(contribution),
+        value: BigInt(initialContribution),
         chainId,
       });
       
-      console.log("Join pool transaction hash:", tx);
+      console.log("Car joined pool, transaction hash:", tx);
       return tx;
     } catch (error) {
       console.error("Error in joinPool contract call:", error);
@@ -327,16 +327,73 @@ export function useCarInsuranceData(chainId: number = 296) {
     }
   }
 
+  // Add a new function for monthly contributions
+  const contributeMonthly = async (poolId: bigint | number, amount: bigint | number) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    console.log("Making monthly contribution with parameters:", {
+      poolId: BigInt(poolId).toString(),
+      amount: BigInt(amount).toString()
+    });
+
+    try {
+      const tx = await writeContract({
+        address: carinsurance_address as Address,
+        abi: carinsurance_abi,
+        functionName: 'contributeToPool',
+        args: [BigInt(poolId)],
+        value: BigInt(amount),
+        chainId,
+      });
+      
+      console.log("Monthly contribution transaction hash:", tx);
+      return tx;
+    } catch (error) {
+      console.error("Error in monthly contribution call:", error);
+      throw error;
+    }
+  }
+
   const leavePool = async (poolId: bigint | number) => {
     if (!address) throw new Error('Wallet not connected')
 
-    return writeContract({
-      address: carinsurance_address as Address,
-      abi: carinsurance_abi,
-      functionName: 'leavePool',
-      args: [BigInt(poolId)],
-      chainId,
-    })
+    console.log("Leaving pool with ID:", BigInt(poolId).toString());
+    
+    try {
+      const tx = await writeContract({
+        address: carinsurance_address as Address,
+        abi: carinsurance_abi,
+        functionName: 'leavePool',
+        args: [BigInt(poolId)],
+        chainId,
+      });
+      
+      console.log("Left pool, transaction hash:", tx);
+      return tx;
+    } catch (error) {
+      console.error("Error in leavePool contract call:", error);
+      throw error;
+    }
+  }
+
+  // Get user contribution history
+  const getUserContributionHistory = async (poolId: bigint | number) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    try {
+      const history = await writeContract({
+        address: carinsurance_address as Address,
+        abi: carinsurance_abi,
+        functionName: 'getMemberContributionHistory',
+        args: [BigInt(poolId), address],
+        chainId,
+      });
+      
+      return history;
+    } catch (error) {
+      console.error("Error fetching contribution history:", error);
+      throw error;
+    }
   }
 
   // Claims Management
@@ -382,20 +439,28 @@ export function useCarInsuranceData(chainId: number = 296) {
   }
 
   // Assessor Management
-  const registerAssessor = async (
+  const addAssessor = async (
     assessorAddress: Address,
     name: string,
     credentials: string
   ) => {
-    if (!address) throw new Error('Wallet not connected')
+    if (!address) throw new Error('Wallet not connected');
 
-    return writeContract({
-      address: carinsurance_address as Address,
-      abi: carinsurance_abi,
-      functionName: 'registerAssessor',
-      args: [assessorAddress, name, credentials],
-      chainId,
-    })
+    try {
+      const tx = await writeContract({
+        address: carinsurance_address as Address,
+        abi: carinsurance_abi,
+        functionName: 'registerAssessor',
+        args: [assessorAddress, name, credentials],
+        chainId,
+      });
+      
+      console.log("Assessor added, transaction hash:", tx);
+      return tx;
+    } catch (error) {
+      console.error("Error adding assessor:", error);
+      throw error;
+    }
   }
 
   const setAssessorStatus = async (
@@ -489,6 +554,10 @@ export function useCarInsuranceData(chainId: number = 296) {
     createPool,
     joinPool,
     leavePool,
+    contributeMonthly,
+    
+    // Exported function
+    getUserContributionHistory,
     
     // Write operations - Claims management
     fileClaim,
@@ -496,7 +565,7 @@ export function useCarInsuranceData(chainId: number = 296) {
     rejectClaim,
 
     // Write operations - Assessor management
-    registerAssessor,
+    addAssessor,
     setAssessorStatus,
     assignAssessor,
     submitAssessment,

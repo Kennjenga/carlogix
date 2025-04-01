@@ -246,8 +246,8 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                   id: eventData.poolId.toString(),
                   name: eventData.name,
                   description: "Newly created insurance pool",
-                  minContribution: BigInt(50000000000000000), // Default 0.05 ETH
-                  maxCoverage: BigInt(1000000000000000000), // Default 1 ETH
+                  minContribution: BigInt(50000000000000000), // Default 0.05 Hbar
+                  maxCoverage: BigInt(1000000000000000000), // Default 1 Hbar
                   memberCount: 1, // Created with 1 member (the creator)
                   totalFunds: BigInt(0), // Initially no funds
                 },
@@ -347,7 +347,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
     try {
       setLoading(true);
 
-      // Convert ETH to Wei (or whatever the native token is)
+      // Convert Hbar to Wei (or whatever the native token is)
       const contributionInWei = BigInt(
         Math.floor(parseFloat(contributionAmount) * 10 ** 18)
       );
@@ -356,7 +356,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
         poolId: selectedPool,
         carId: selectedCarForPool,
         contribution: contributionInWei.toString(),
-        contributionInEth: contributionAmount,
+        contributionInHbar: contributionAmount,
       });
 
       // First, check if the contract needs approval to transfer funds
@@ -478,9 +478,11 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
     }
   };
 
-  // Format a bigint value as ETH
-  const formatEth = (value: bigint) => {
-    return (Number(value) / 10 ** 18).toFixed(4);
+  console.log("is", showCreatePoolForm);
+
+  // Format a bigint value as Hbar
+  const formatHbar = (value: bigint) => {
+    return (Number(value) / 1000000000000000000).toFixed(4);
   };
 
   if (parentLoading || fetchingPools || loadingMemberPools) {
@@ -606,7 +608,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                         htmlFor="minContribution"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        Minimum Contribution (ETH){" "}
+                        Minimum Contribution (Hbar){" "}
                         <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -631,7 +633,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                         htmlFor="maxCoverage"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        Maximum Coverage (ETH){" "}
+                        Maximum Coverage (Hbar){" "}
                         <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -722,11 +724,11 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                   <div className="mt-2 ml-6 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <div className="text-gray-500">
                       <span className="font-medium">Min Contribution:</span>{" "}
-                      {formatEth(pool.minContribution)} ETH
+                      {formatHbar(pool.minContribution)} Hbar
                     </div>
                     <div className="text-gray-500">
                       <span className="font-medium">Max Coverage:</span>{" "}
-                      {formatEth(pool.maxCoverage)} ETH
+                      {formatHbar(pool.maxCoverage)} Hbar
                     </div>
                     {pool.memberCount !== undefined && (
                       <div className="text-gray-500">
@@ -737,7 +739,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                     {pool.totalFunds !== undefined && (
                       <div className="text-gray-500">
                         <span className="font-medium">Total Balance:</span>{" "}
-                        {formatEth(pool.totalFunds)} ETH
+                        {formatHbar(pool.totalFunds)} Hbar
                       </div>
                     )}
                   </div>
@@ -804,7 +806,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                   htmlFor="contribution"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Contribution Amount (ETH)
+                  Contribution Amount (Hbar)
                 </label>
                 <input
                   id="contribution"
@@ -817,11 +819,11 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Minimum contribution:{" "}
-                  {formatEth(
+                  {formatHbar(
                     pools.find((p) => p.id === selectedPool)?.minContribution ||
                       BigInt(0)
                   )}{" "}
-                  ETH
+                  Hbar
                 </p>
               </div>
 
