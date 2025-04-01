@@ -229,7 +229,7 @@ const InsuranceClaims: React.FC<InsuranceClaimsProps> = ({ tokenId }) => {
                   htmlFor="amount"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Claim Amount (ETH)
+                  Claim Amount (Hbar)
                 </label>
                 <input
                   id="amount"
