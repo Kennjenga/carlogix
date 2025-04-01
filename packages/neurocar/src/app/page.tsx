@@ -274,20 +274,20 @@ export default function Home() {
                   <div className="hidden md:block absolute top-7 left-1/2 w-full h-0.5 bg-gradient-to-r from-blue-500 to-blue-300"></div>
                 )}
                 <h3 className="text-xl font-semibold mb-2 font-mono">
-                  {index === 0 && "CONNECT_WALLET"}
-                  {index === 1 && "MINT_CAR_NFT"}
-                  {index === 2 && "RECORD_MAINTENANCE"}
-                  {index === 3 && "JOIN_INSURANCE"}
+                  {index === 0 && "MINT_CAR_NFT"}
+                  {index === 1 && "RECORD_MAINTENANCE"}
+                  {index === 2 && "JOIN_INSURANCE"}
+                  {index === 3 && "DIGITAL_MECH"}
                 </h3>
                 <p className="text-slate-600">
                   {index === 0 &&
-                    "Link your blockchain wallet to get started with NeuroCar"}
-                  {index === 1 &&
                     "Register your vehicle details and create a unique NFT"}
-                  {index === 2 &&
+                  {index === 1 &&
                     "Add service records, repairs, and issue reports"}
-                  {index === 3 &&
+                  {index === 2 &&
                     "Opt into community-based decentralized insurance"}
+                    {index === 3 &&
+                    "Use maintenance records and issue reports with our AI to diagnose the issue"}
                 </p>
               </div>
             ))}
