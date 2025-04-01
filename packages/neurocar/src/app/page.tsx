@@ -107,17 +107,17 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <Link
-                href="/mymech"
+                href="/dashboard"
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-mono rounded-md transition duration-300 text-center relative overflow-hidden group"
               >
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                <span className="relative z-10">DIGITAL_MECHANIC</span>
+                <span className="relative z-10">EXPLORE_DASHBOARD</span>
               </Link>
               <Link
-                href="/insurance"
+                href="/mymech"
                 className="px-8 py-4 bg-slate-100 border-2 border-blue-500 hover:bg-blue-50 text-blue-600 font-mono rounded-md transition duration-300 text-center"
               >
-                DISCOVER_INSURANCE
+                DIGITAL_MECHANIC
               </Link>
             </div>
           </div>
