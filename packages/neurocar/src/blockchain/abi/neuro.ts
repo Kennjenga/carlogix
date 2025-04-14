@@ -1996,14 +1996,3 @@ export const carinsurance_abi = [
 
 export const carinsurance_address = "0x473287848ac34aCb084248ECb54Cd2a1790F036c"
 
-
-// useinsurance hooks
-// Deploying contracts to Hedera Testnet...
-// Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
-// CarNFT deployed to: 0x3FcE4b297fc4F46eab18b61258657C26a2e22c41
-// CarInsurancePool deployed to: 0x473287848ac34aCb084248ECb54Cd2a1790F036c
-// Deployment complete!
-
-// drop back
-// export const carnft_address = "0xa857caf075Cb9060e4C9B589ff2Df43731e0EB32"
-// export const carinsurance_address = "0xbb760e2ad9c6DAD676be1414b53a874b92dD82bf"

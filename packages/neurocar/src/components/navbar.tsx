@@ -43,7 +43,7 @@ const Navbar = () => {
             <ConnectButton
               accountStatus={{
                 smallScreen: "avatar",
-                largeScreen: "full",
+                // largeScreen: "avatar",
               }}
             />
           </div>
@@ -85,7 +85,7 @@ const Navbar = () => {
             <ConnectButton
               accountStatus={{
                 smallScreen: "avatar",
-                largeScreen: "full",
+                // largeScreen: "full",
               }}
             />
           </div>
