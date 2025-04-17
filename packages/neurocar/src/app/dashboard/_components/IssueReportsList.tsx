@@ -10,7 +10,10 @@ import {
   CheckCircle,
   Loader,
   XCircle,
+  Printer,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface IssueReportsListProps {
   tokenId: string;
@@ -22,9 +25,9 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
     isLoading,
     isError,
     refetch,
-  } = useIssueReports(BigInt(tokenId), 296);
+  } = useIssueReports(BigInt(tokenId), 43113);
 
-  const carNFT = useCarNFTData(296);
+  const carNFT = useCarNFTData(43113);
 
   // Handle resolving an issue
   const handleResolveIssue = async (reportIndex: number) => {
@@ -35,6 +38,37 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
     } catch (error) {
       console.error("Error resolving issue:", error);
     }
+  };
+
+  const handlePrintIssues = () => {
+    const doc = new jsPDF();
+    const title = "Vehicle Issue Reports";
+
+    // Add title
+    doc.setFontSize(16);
+    doc.text(title, 14, 20);
+
+    // Add timestamp
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableData = sortedReports.map((report) => [
+      new Date(Number(report.timestamp) * 1000).toLocaleDateString(),
+      report.issueType,
+      report.description,
+      report.resolved ? "Resolved" : "Pending",
+      report.evidenceURI ? "Yes" : "No",
+    ]);
+
+    autoTable(doc, {
+      head: [["Date", "Issue Type", "Description", "Status", "Evidence"]],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [245, 158, 11] }, // Yellow color for issues
+    });
+
+    doc.save(`issue-reports-${tokenId}.pdf`);
   };
 
   // Display loading state
@@ -97,6 +131,22 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
 
   return (
     <div className="border border-gray-200 rounded-md overflow-hidden">
+      <div className="bg-amber-50 p-2 border-b border-gray-200 flex justify-between items-center mb-2">
+        <div className="flex items-center">
+          <AlertTriangle size={16} className="text-amber-500 mr-2" />
+          <span className="text-amber-700 font-medium">
+            {sortedReports.length} issue reports
+          </span>
+        </div>
+        <button
+          onClick={handlePrintIssues}
+          className="text-amber-600 hover:text-amber-800 p-1 rounded flex items-center gap-1"
+          title="Print issue reports"
+        >
+          <Printer size={16} />
+          <span className="text-sm">Print</span>
+        </button>
+      </div>
       <ul className="divide-y divide-gray-200">
         {sortedReports.map((report, index) => (
           <li

@@ -6,9 +6,8 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "deploy:hedera": "npx hardhat run ./ignition/modules/deploy.js --network hederaTestnet",
-    "deploy:normal": "npx hardhat run ./ignition/modules/deploy.js --network lisk-sepolia",
-    "deploy:ignition": "npx hardhat ignition deploy ./ignition/modules/deploy.js --network lisk-sepolia",
+    "deploy:avax": "npx hardhat run ./ignition/modules/deploy.js --network avalancheFujiTestnet",
+    "deploy:normal": "npx hardhat run ./ignition/modules/deploy.js --network sepolia",
     "hardhat-verify": "npx hardhat verify"
   },
   "devDependencies": {

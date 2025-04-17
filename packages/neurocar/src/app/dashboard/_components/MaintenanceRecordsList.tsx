@@ -1,9 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Wrench, FileText, AlertCircle, Loader, RefreshCw } from "lucide-react";
+import {
+  Wrench,
+  FileText,
+  AlertCircle,
+  Loader,
+  RefreshCw,
+  Printer,
+} from "lucide-react";
 import { createPublicClient, http } from "viem";
 import { carnft_abi, carnft_address } from "@/blockchain/abi/neuro";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Direct RPC URL for Hedera testnet
 const HEDERA_RPC_URL = "https://testnet.hashio.io/api";
@@ -132,6 +141,40 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   };
 
+  // Handle print records functionality
+  const handlePrintRecords = () => {
+    const doc = new jsPDF();
+    const title = "Vehicle Maintenance History";
+
+    // Add title
+    doc.setFontSize(16);
+    doc.text(title, 14, 20);
+
+    // Add timestamp
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableData = sortedRecords.map((record) => [
+      new Date(Number(record.timestamp) * 1000).toLocaleDateString(),
+      record.description,
+      record.serviceProvider,
+      record.mileage.toString() + " miles",
+      record.documentURI ? "Yes" : "No",
+    ]);
+
+    autoTable(doc, {
+      head: [
+        ["Date", "Description", "Service Provider", "Mileage", "Documentation"],
+      ],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save(`maintenance-history-${tokenId}.pdf`);
+  };
+
   // Display loading state
   if (isLoading) {
     return (
@@ -212,13 +255,23 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
             </span>
           )}
         </div>
-        <button
-          onClick={handleRefresh}
-          className="text-blue-600 hover:text-blue-800 p-1 rounded"
-          title="Refresh maintenance records"
-        >
-          <RefreshCw size={16} />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handlePrintRecords}
+            className="text-blue-600 hover:text-blue-800 p-1 rounded flex items-center gap-1"
+            title="Print maintenance records"
+          >
+            <Printer size={16} />
+            <span className="text-sm">Print</span>
+          </button>
+          <button
+            onClick={handleRefresh}
+            className="text-blue-600 hover:text-blue-800 p-1 rounded"
+            title="Refresh maintenance records"
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
       </div>
       <ul className="divide-y divide-gray-200">
         {sortedRecords.map((record, index) => (

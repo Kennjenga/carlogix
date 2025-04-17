@@ -21,8 +21,9 @@ contract CarNFT is ERC721Enumerable, Ownable {
         string model;
         uint256 year;
         string registrationNumber;
-        string metadataURI; // IPFS URI to metadata (including images)
+        string imageURI; // Direct path to the car image
         uint256 createdAt;
+        bool isDeleted; // Flag to mark if a car is deleted
     }
 
     // Struct for maintenance records
@@ -58,11 +59,18 @@ contract CarNFT is ERC721Enumerable, Ownable {
     // Mapping from VIN to token ID for easy lookup
     mapping(string => uint256) private _vinToTokenId;
 
+    // Mapping from registration number to token ID for easy lookup
+    mapping(string => uint256) private _regNumberToTokenId;
+
+    // Mapping to track registration numbers to prevent duplicates
+    mapping(string => bool) private _regNumberRegistered;
+
     // Events
     event CarMinted(uint256 indexed tokenId, string vin, address owner);
     event MaintenanceAdded(uint256 indexed tokenId, uint256 recordIndex);
     event IssueReported(uint256 indexed tokenId, uint256 reportIndex);
     event IssueResolved(uint256 indexed tokenId, uint256 reportIndex);
+    event CarDeleted(uint256 indexed tokenId, string vin);
 
     constructor() ERC721("Car Digital Logbook", "CDLB") {}
 
@@ -74,7 +82,7 @@ contract CarNFT is ERC721Enumerable, Ownable {
      * @param model Car model
      * @param year Manufacturing year
      * @param registrationNumber Official registration number
-     * @param metadataURI URI to the metadata (IPFS) including car images
+     * @param imageURI Direct URI to the car image
      */
     function mintCar(
         address to,
@@ -83,13 +91,22 @@ contract CarNFT is ERC721Enumerable, Ownable {
         string memory model,
         uint256 year,
         string memory registrationNumber,
-        string memory metadataURI
+        string memory imageURI
     ) public returns (uint256) {
         require(!_vinRegistered[vin], "VIN already registered");
+        require(
+            !_regNumberRegistered[registrationNumber],
+            "Registration number already registered"
+        );
         require(bytes(vin).length > 0, "VIN cannot be empty");
         require(bytes(make).length > 0, "Make cannot be empty");
         require(bytes(model).length > 0, "Model cannot be empty");
         require(year > 0, "Year must be valid");
+        require(
+            bytes(registrationNumber).length > 0,
+            "Registration number cannot be empty"
+        );
+        require(bytes(imageURI).length > 0, "Image URI cannot be empty");
 
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
@@ -102,12 +119,16 @@ contract CarNFT is ERC721Enumerable, Ownable {
             model: model,
             year: year,
             registrationNumber: registrationNumber,
-            metadataURI: metadataURI,
-            createdAt: block.timestamp
+            imageURI: imageURI,
+            createdAt: block.timestamp,
+            isDeleted: false
         });
 
         _vinRegistered[vin] = true;
         _vinToTokenId[vin] = newTokenId;
+
+        _regNumberRegistered[registrationNumber] = true;
+        _regNumberToTokenId[registrationNumber] = newTokenId;
 
         emit CarMinted(newTokenId, vin, to);
 
@@ -122,7 +143,34 @@ contract CarNFT is ERC721Enumerable, Ownable {
         uint256 tokenId
     ) public view override returns (string memory) {
         require(_exists(tokenId), "Token does not exist");
-        return _carDetails[tokenId].metadataURI;
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
+        // For simplicity, we're directly returning the image URI as the token URI
+        return _carDetails[tokenId].imageURI;
+    }
+
+    /**
+     * @dev Delete a car NFT (logical deletion)
+     * @param tokenId The ID of the car NFT to delete
+     */
+    function deleteCar(uint256 tokenId) public {
+        require(_exists(tokenId), "Car does not exist");
+        require(
+            ownerOf(tokenId) == msg.sender || owner() == msg.sender,
+            "Only owner or contract owner can delete"
+        );
+        require(!_carDetails[tokenId].isDeleted, "Car already deleted");
+
+        // Mark the car as deleted
+        _carDetails[tokenId].isDeleted = true;
+
+        // Free up the VIN and registration number for future use
+        string memory vin = _carDetails[tokenId].vin;
+        string memory regNumber = _carDetails[tokenId].registrationNumber;
+
+        _vinRegistered[vin] = false;
+        _regNumberRegistered[regNumber] = false;
+
+        emit CarDeleted(tokenId, vin);
     }
 
     /**
@@ -141,6 +189,7 @@ contract CarNFT is ERC721Enumerable, Ownable {
         string memory documentURI
     ) public {
         require(_exists(tokenId), "Car does not exist");
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
             "Not owner nor approved"
@@ -173,6 +222,7 @@ contract CarNFT is ERC721Enumerable, Ownable {
         string memory evidenceURI
     ) public {
         require(_exists(tokenId), "Car does not exist");
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
             "Not owner nor approved"
@@ -198,6 +248,7 @@ contract CarNFT is ERC721Enumerable, Ownable {
      */
     function resolveIssue(uint256 tokenId, uint256 reportIndex) public {
         require(_exists(tokenId), "Car does not exist");
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
             "Not owner nor approved"
@@ -223,7 +274,85 @@ contract CarNFT is ERC721Enumerable, Ownable {
      */
     function getTokenIdByVIN(string memory vin) public view returns (uint256) {
         require(_vinRegistered[vin], "VIN not registered");
-        return _vinToTokenId[vin];
+        uint256 tokenId = _vinToTokenId[vin];
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
+        return tokenId;
+    }
+
+    /**
+     * @dev Get token ID by registration number
+     * @param registrationNumber The official registration number
+     * @return tokenId The token ID for the given registration number
+     */
+    function getTokenIdByRegistrationNumber(
+        string memory registrationNumber
+    ) public view returns (uint256) {
+        require(
+            _regNumberRegistered[registrationNumber],
+            "Registration number not registered"
+        );
+        uint256 tokenId = _regNumberToTokenId[registrationNumber];
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
+        return tokenId;
+    }
+
+    /**
+     * @dev Search car by VIN and get vehicle details
+     * @param vin Vehicle Identification Number
+     * @return make The car manufacturer
+     * @return model The car model
+     * @return year The manufacturing year
+     * @return imageURI Direct URI to the car image
+     */
+    function searchByVIN(
+        string memory vin
+    )
+        public
+        view
+        returns (
+            string memory make,
+            string memory model,
+            uint256 year,
+            string memory imageURI
+        )
+    {
+        require(_vinRegistered[vin], "VIN not registered");
+        uint256 tokenId = _vinToTokenId[vin];
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
+
+        CarDetails memory car = _carDetails[tokenId];
+        return (car.make, car.model, car.year, car.imageURI);
+    }
+
+    /**
+     * @dev Search car by registration number and get vehicle details
+     * @param registrationNumber The official registration number
+     * @return make The car manufacturer
+     * @return model The car model
+     * @return year The manufacturing year
+     * @return imageURI Direct URI to the car image
+     */
+    function searchByRegistrationNumber(
+        string memory registrationNumber
+    )
+        public
+        view
+        returns (
+            string memory make,
+            string memory model,
+            uint256 year,
+            string memory imageURI
+        )
+    {
+        require(
+            _regNumberRegistered[registrationNumber],
+            "Registration number not registered"
+        );
+        uint256 tokenId = _regNumberToTokenId[registrationNumber];
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
+
+        CarDetails memory car = _carDetails[tokenId];
+        return (car.make, car.model, car.year, car.imageURI);
     }
 
     // Getter functions
@@ -247,6 +376,7 @@ contract CarNFT is ERC721Enumerable, Ownable {
         uint256 tokenId
     ) public view returns (MaintenanceRecord[] memory) {
         require(_exists(tokenId), "Car does not exist");
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
         return _maintenanceRecords[tokenId];
     }
 
@@ -258,6 +388,7 @@ contract CarNFT is ERC721Enumerable, Ownable {
         uint256 tokenId
     ) public view returns (IssueReport[] memory) {
         require(_exists(tokenId), "Car does not exist");
+        require(!_carDetails[tokenId].isDeleted, "Car has been deleted");
         return _issueReports[tokenId];
     }
 
