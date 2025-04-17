@@ -47,7 +47,7 @@ interface LogWithArgs extends Log {
 // Zero address constant for fallbacks
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address
 
-export function useCarInsuranceData(chainId: number = 296) {
+export function useCarInsuranceData(chainId: number = 43113) {
   // First, define hooks
   const { address } = useAccount()
   const { writeContract } = useWriteContract()

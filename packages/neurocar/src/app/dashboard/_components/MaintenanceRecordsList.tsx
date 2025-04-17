@@ -14,8 +14,8 @@ import { carnft_abi, carnft_address } from "@/blockchain/abi/neuro";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Direct RPC URL for Hedera testnet
-const HEDERA_RPC_URL = "https://testnet.hashio.io/api";
+// Direct RPC URL for fuji testnet
+const AVAX_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
 
 // Contract details
 const CARNFT_ADDRESS = carnft_address;
@@ -57,7 +57,7 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
 
   // Create a dedicated client with the correct RPC URL
   const client = createPublicClient({
-    transport: http(HEDERA_RPC_URL),
+    transport: http(AVAX_RPC_URL),
   });
 
   // Function to fetch maintenance records
@@ -89,7 +89,7 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
         setErrorMessage("");
 
         console.log(`Fetching maintenance records for token: ${tokenId}`);
-        console.log(`Using RPC URL: ${HEDERA_RPC_URL}`);
+        console.log(`Using RPC URL: ${AVAX_RPC_URL}`);
         console.log(`Contract address: ${CARNFT_ADDRESS}`);
 
         // Make the contract call directly

@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Address, createPublicClient, http } from 'viem';
-import { hederaTestnet, sepolia } from 'viem/chains';
+import { avalancheFuji, sepolia } from 'viem/chains';
 import { useAccount } from 'wagmi';
 import { carnft_abi, carnft_address } from '@/blockchain/abi/neuro';
 import { CarDetails, CarWithId, MaintenanceRecord } from '@/types';
 
-export function useUserCars(ownerAddress?: Address, chainId: number = 296) {
+export function useUserCars(ownerAddress?: Address, chainId: number = 43113) {
   const { address: connectedAddress } = useAccount();
   const [cars, setCars] = useState<CarWithId[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export function useUserCars(ownerAddress?: Address, chainId: number = 296) {
         
         // Create a client to interact with the blockchain
         const client = createPublicClient({
-          chain: chainId === 296 ? hederaTestnet : sepolia,
+          chain: chainId === 43113 ? avalancheFuji : sepolia,
           transport: http()
         });
         

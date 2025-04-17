@@ -4,34 +4,34 @@
 import { useReadContract } from 'wagmi'
 import { Abi, Address } from 'viem'
 import { createPublicClient, http } from 'viem';
-import { hederaTestnet } from 'viem/chains';
+import { avalancheFuji } from 'viem/chains';
 import { carnft_abi, carnft_address, carinsurance_abi, carinsurance_address } from '@/blockchain/abi/neuro'
 
 // Define the correct RPC URL for Hedera testnet
-const HEDERA_RPC_URL = "https://testnet.hashio.io/api";
+const AVAX_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
 
 // Client for direct blockchain interactions
 const publicClient = createPublicClient({
   chain: {
-    ...hederaTestnet,
-    id: 296,
-    name: 'Hedera Testnet',
+    ...avalancheFuji,
+    id: 43113,
+    name: 'fuji',
     rpcUrls: {
       default: {
-        http: [HEDERA_RPC_URL],
+        http: [AVAX_RPC_URL],
       },
       public: {
-        http: [HEDERA_RPC_URL],
+        http: [AVAX_RPC_URL],
       },
     },
   },
-  transport: http(HEDERA_RPC_URL),
+  transport: http(AVAX_RPC_URL),
 });
 
 // -- Car NFT Read Hooks --
 
 // Get car details
-export function useCarDetails(tokenId: bigint | number | undefined, chainId: number = 296) {
+export function useCarDetails(tokenId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carnft_address as Address,
     abi: carnft_abi,
@@ -45,7 +45,7 @@ export function useCarDetails(tokenId: bigint | number | undefined, chainId: num
 }
 
 // Get maintenance records
-export function useMaintenanceRecords(tokenId: bigint | number | undefined, chainId: number = 296) {
+export function useMaintenanceRecords(tokenId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carnft_address as Address,
     abi: carnft_abi,
@@ -104,7 +104,7 @@ export async function fetchMultipleMaintenanceRecords(tokenIds: number[]) {
 }
 
 // Get issue reports
-export function useIssueReports(tokenId: bigint | number | undefined, chainId: number = 296) {
+export function useIssueReports(tokenId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carnft_address as Address,
     abi: carnft_abi,
@@ -118,7 +118,7 @@ export function useIssueReports(tokenId: bigint | number | undefined, chainId: n
 }
 
 // Get token info 
-export function useTokenURI(tokenId: bigint | number | undefined, chainId: number = 296) {
+export function useTokenURI(tokenId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carnft_address as Address,
     abi: carnft_abi,
@@ -131,7 +131,7 @@ export function useTokenURI(tokenId: bigint | number | undefined, chainId: numbe
   })
 }
 
-export function useOwnerOf(tokenId: bigint | number | undefined, chainId: number = 296) {
+export function useOwnerOf(tokenId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carnft_address as Address,
     abi: carnft_abi,
@@ -144,7 +144,7 @@ export function useOwnerOf(tokenId: bigint | number | undefined, chainId: number
   })
 }
 
-export function useTokenIdByVIN(vin: string | undefined, chainId: number = 296) {
+export function useTokenIdByVIN(vin: string | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carnft_address as Address,
     abi: carnft_abi,
@@ -160,7 +160,7 @@ export function useTokenIdByVIN(vin: string | undefined, chainId: number = 296) 
 // -- Car Insurance Read Hooks --
 
 // Role related hooks
-export function useAdminRole(chainId: number = 296) {
+export function useAdminRole(chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -169,7 +169,7 @@ export function useAdminRole(chainId: number = 296) {
   })
 }
 
-export function useAssessorRole(chainId: number = 296) {
+export function useAssessorRole(chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -178,7 +178,7 @@ export function useAssessorRole(chainId: number = 296) {
   })
 }
 
-export function useDefaultAdminRole(chainId: number = 296) {
+export function useDefaultAdminRole(chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -187,7 +187,7 @@ export function useDefaultAdminRole(chainId: number = 296) {
   })
 }
 
-export function useHasRole(role: string | undefined, account: Address | undefined, chainId: number = 296) {
+export function useHasRole(role: string | undefined, account: Address | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -200,7 +200,7 @@ export function useHasRole(role: string | undefined, account: Address | undefine
   })
 }
 
-export function useGetRoleAdmin(role: string | undefined, chainId: number = 296) {
+export function useGetRoleAdmin(role: string | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -214,7 +214,7 @@ export function useGetRoleAdmin(role: string | undefined, chainId: number = 296)
 }
 
 // Car insurance NFT Contract reference
-export function useCarNFTContract(chainId: number = 296) {
+export function useCarNFTContract(chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -224,7 +224,7 @@ export function useCarNFTContract(chainId: number = 296) {
 }
 
 // Pool management hooks
-export function usePoolDetails(poolId: bigint | number | undefined, chainId: number = 296) {
+export function usePoolDetails(poolId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -240,7 +240,7 @@ export function usePoolDetails(poolId: bigint | number | undefined, chainId: num
 export function useMembershipDetails(
   poolId: bigint | number | undefined, 
   memberAddress: Address | undefined, 
-  chainId: number = 296
+  chainId: number = 43113
 ) {
   return useReadContract({
     address: carinsurance_address as Address,
@@ -254,7 +254,7 @@ export function useMembershipDetails(
   })
 }
 
-export function useMemberPools(memberAddress: Address | undefined, chainId: number = 296) {
+export function useMemberPools(memberAddress: Address | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -268,7 +268,7 @@ export function useMemberPools(memberAddress: Address | undefined, chainId: numb
 }
 
 // Claims management hooks
-export function useClaimDetails(claimId: bigint | number | undefined, chainId: number = 296) {
+export function useClaimDetails(claimId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -281,7 +281,7 @@ export function useClaimDetails(claimId: bigint | number | undefined, chainId: n
   })
 }
 
-export function useClaimEvaluations(claimId: bigint | number | undefined, chainId: number = 296) {
+export function useClaimEvaluations(claimId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -294,7 +294,7 @@ export function useClaimEvaluations(claimId: bigint | number | undefined, chainI
   })
 }
 
-export function useCarClaims(tokenId: bigint | number | undefined, chainId: number = 296) {
+export function useCarClaims(tokenId: bigint | number | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -308,7 +308,7 @@ export function useCarClaims(tokenId: bigint | number | undefined, chainId: numb
 }
 
 // Assessor management hook
-export function useAssessorDetails(assessorAddress: Address | undefined, chainId: number = 296) {
+export function useAssessorDetails(assessorAddress: Address | undefined, chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
@@ -322,7 +322,7 @@ export function useAssessorDetails(assessorAddress: Address | undefined, chainId
 }
 
 // Get pool count
-export function usePoolCount(chainId: number = 296) {
+export function usePoolCount(chainId: number = 43113) {
   return useReadContract({
     address: carinsurance_address as Address,
     abi: carinsurance_abi,

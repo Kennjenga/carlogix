@@ -24,10 +24,13 @@ interface InsuranceClaimsProps {
 
 const InsuranceClaims: React.FC<InsuranceClaimsProps> = ({ tokenId }) => {
   useAccount();
-  const { data, isLoading: claimsLoading } = useCarClaims(BigInt(tokenId), 296);
+  const { data, isLoading: claimsLoading } = useCarClaims(
+    BigInt(tokenId),
+    43113
+  );
   const claimIds = data as bigint[] | undefined;
 
-  const carInsurance = useCarInsuranceData(296);
+  const carInsurance = useCarInsuranceData(43113);
 
   // State variables
   interface Claim {

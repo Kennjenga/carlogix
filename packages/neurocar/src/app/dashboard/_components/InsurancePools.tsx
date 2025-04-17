@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { CarWithId } from "@/types";
 import { Address, createPublicClient, http } from "viem";
-import { hederaTestnet } from "viem/chains";
+import { avalancheFuji } from "viem/chains";
 import { carinsurance_abi, carinsurance_address } from "@/blockchain/abi/neuro";
 
 interface InsurancePoolsProps {
@@ -42,19 +42,19 @@ interface PoolData {
 // Create a client to interact directly with the blockchain
 const publicClient = createPublicClient({
   chain: {
-    ...hederaTestnet,
-    id: 296,
-    name: "Hedera Testnet",
+    ...avalancheFuji,
+    id: 43113,
+    name: "fuji Testnet",
     rpcUrls: {
       default: {
-        http: ["https://testnet.hashio.io/api"],
+        http: ["https://api.avax-test.network/ext/bc/C/rpc"],
       },
       public: {
-        http: ["https://testnet.hashio.io/api"],
+        http: ["https://api.avax-test.network/ext/bc/C/rpc"],
       },
     },
   },
-  transport: http("https://testnet.hashio.io/api"),
+  transport: http("https://api.avax-test.network/ext/bc/C/rpc"),
 });
 
 const InsurancePools: React.FC<InsurancePoolsProps> = ({
@@ -63,7 +63,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
   loading: parentLoading,
 }) => {
   const { address } = useAccount();
-  const carInsurance = useCarInsuranceData(296);
+  const carInsurance = useCarInsuranceData(43113);
 
   // State for pools data
   const [pools, setPools] = useState<PoolData[]>([]);
@@ -92,7 +92,7 @@ const InsurancePools: React.FC<InsurancePoolsProps> = ({
   // Get member pools data
   const { data: memberPoolIds, isLoading: loadingMemberPools } = useMemberPools(
     address,
-    296
+    43113
   ) as {
     data: bigint[] | undefined;
     isLoading: boolean;
