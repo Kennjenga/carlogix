@@ -26,7 +26,7 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8">
-          {["Home", "Dashboard", "mymech"].map((item, index) => (
+          {["Home", "Dashboard", "mymech", "mechanics"].map((item, index) => (
             <Link
               key={index}
               href={
@@ -41,10 +41,9 @@ const Navbar = () => {
 
           <div className="relative pl-6 ml-2 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-px before:bg-blue-100">
             <ConnectButton
-              accountStatus={{
-                smallScreen: "avatar",
-                // largeScreen: "avatar",
-              }}
+              showBalance={false}
+              chainStatus="icon"
+              accountStatus="avatar"
             />
           </div>
         </div>
@@ -67,7 +66,7 @@ const Navbar = () => {
         }`}
       >
         <div className="container mx-auto px-6 flex flex-col space-y-4">
-          {["Home", "Dashboard", "mymech"].map((item, index) => (
+          {["Home", "Dashboard", "mymech", "mechanics"].map((item, index) => (
             <Link
               key={index}
               href={
@@ -83,10 +82,9 @@ const Navbar = () => {
 
           <div className="py-2">
             <ConnectButton
-              accountStatus={{
-                smallScreen: "avatar",
-                // largeScreen: "full",
-              }}
+              showBalance={false}
+              chainStatus="icon"
+              accountStatus="avatar"
             />
           </div>
         </div>

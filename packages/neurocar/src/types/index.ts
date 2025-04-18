@@ -172,3 +172,13 @@ export type ClaimPaidEvent = {
   recipient: Address;
   amount: bigint;
 }
+
+export interface Mechanic {
+  id: number;
+  name: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+  rating: number;
+  specialization: string;
+}

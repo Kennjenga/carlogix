@@ -7,735 +7,595 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "./CarNFT.sol";
 
 /**
- * @title CarInsurancePool
- * @dev Contract for managing decentralized car insurance pools with certified assessors
+ * @title DecentralizedVehicleInsurance
+ * @dev A comprehensive decentralized insurance system for vehicles
  */
-contract CarInsurancePool is AccessControlEnumerable, ReentrancyGuard {
+contract DecentralizedVehicleInsurance is
+    AccessControlEnumerable,
+    ReentrancyGuard
+{
     using Counters for Counters.Counter;
 
     // Role definitions
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant ASSESSOR_ROLE = keccak256("ASSESSOR_ROLE");
 
-    // Counter for pool IDs
-    Counters.Counter private _poolIds;
-
-    // Counter for claim IDs
+    // Counters
+    Counters.Counter private _membershipIds;
     Counters.Counter private _claimIds;
 
-    // Reference to the CarNFT contract
-    CarNFT public carNFTContract;
+    // State variables
+    CarNFT public immutable carNFTContract;
 
-    // Struct for certified assessor details
+    // Enums
+    enum MembershipStatus {
+        Inactive,
+        Active,
+        Suspended
+    }
+
+    enum ClaimStatus {
+        Pending, // Initial state
+        UnderAssessment, // Assigned to assessor
+        AssessorApproved, // Approved by assessor
+        AssessorRejected, // Rejected by assessor
+        AdminApproved, // Approved by admin
+        AdminRejected, // Rejected by admin
+        Paid, // Claim paid out
+        Expired // Claim expired
+    }
+
+    // Structs
+    struct InsuranceParams {
+        uint256 minMonthlyPremium;
+        uint256 maxCoverageMultiplier;
+        uint256 assessmentTimeLimit;
+        uint256 adminReviewTimeLimit;
+        uint256 minConsecutivePayments;
+        uint256 poolBalance;
+    }
+
     struct Assessor {
         string name;
         string credentials;
-        uint256 registeredAt;
-        bool active;
-        uint256 completedAssessments;
+        string specialization;
+        uint256 registrationDate;
+        uint256 totalAssessments;
+        bool isActive;
+        uint256 reputationScore;
     }
 
-    // Struct for assessor evaluation
-    struct AssessorEvaluation {
-        address assessor;
-        uint256 recommendedPayout;
-        string evaluationNotes;
-        uint256 timestamp;
-        bool approved;
+    struct Membership {
+        address owner;
+        uint256 tokenId; // Vehicle NFT ID
+        uint256 startDate;
+        uint256 coverageAmount;
+        uint256 monthlyPremium;
+        uint256 lastPaymentDate;
+        uint256 totalContributions;
+        uint256 consecutivePayments;
+        MembershipStatus status;
     }
 
-    // Struct for insurance pool
-    struct InsurancePool {
-        string name;
-        string description;
-        uint256 minContribution;
-        uint256 maxCoverage;
-        uint256 totalBalance;
-        uint256 memberCount;
-        uint256 createdAt;
-        bool active;
-    }
-
-    // Struct for pool membership
-    struct PoolMembership {
-        uint256 tokenId; // Car NFT token ID
-        uint256 contribution;
-        uint256 coverageLimit;
-        uint256 joinedAt;
-        bool active;
-    }
-
-    // Claim status
-    enum ClaimStatus {
-        Pending,
-        UnderAssessment,
-        AssessorApproved,
-        AssessorRejected,
-        Approved,
-        Rejected,
-        Paid
-    }
-
-    // Struct for insurance claim
-    struct InsuranceClaim {
-        uint256 poolId;
-        uint256 tokenId;
+    struct Claim {
+        uint256 membershipId;
         address claimant;
-        uint256 amount;
+        uint256 requestedAmount;
         string description;
-        string evidenceURI;
-        uint256 createdAt;
+        string evidenceUri;
+        uint256 filingDate;
         ClaimStatus status;
         address assignedAssessor;
-        uint256 recommendedPayout;
-        uint256 payoutAmount;
-        string rejectionReason;
+        uint256 assignmentDate;
+        bool isAssessorWorking;
+        uint256 assessorApprovedAmount;
+        string assessorNotes;
+        uint256 assessmentDate;
+        uint256 adminApprovedAmount;
+        string adminNotes;
+        uint256 adminReviewDate;
+        uint256 finalPaidAmount;
+        uint256 paymentDate;
     }
 
-    // Struct for contribution record
-    struct ContributionRecord {
-        uint256 timestamp;
-        uint256 amount;
-        uint256 poolId;
-        string contributionType; // "Initial", "Monthly", etc.
-    }
+    // Mappings
+    mapping(uint256 => Membership) public memberships;
+    mapping(uint256 => Claim) public claims;
+    mapping(address => Assessor) public assessors;
+    mapping(address => uint256[]) public membershipsByOwner;
+    mapping(uint256 => uint256[]) public claimsByMembership;
+    mapping(address => uint256[]) public assessorActiveClaims;
+    mapping(uint256 => address[]) public claimAssessorHistory;
 
-    // Mapping from address to assessor details
-    mapping(address => Assessor) private _assessors;
-
-    // Mapping from claim ID to assessor evaluations
-    mapping(uint256 => AssessorEvaluation[]) private _claimEvaluations;
-
-    // Mapping from pool ID to pool details
-    mapping(uint256 => InsurancePool) private _insurancePools;
-
-    // Mapping from pool ID to member address to membership details
-    mapping(uint256 => mapping(address => PoolMembership))
-        private _poolMemberships;
-
-    // Mapping from claim ID to claim details
-    mapping(uint256 => InsuranceClaim) private _insuranceClaims;
-
-    // Mapping from pool ID to member addresses
-    mapping(uint256 => address[]) private _poolMembers;
-
-    // Mapping from address to array of pool IDs they're members of
-    mapping(address => uint256[]) private _memberPools;
-
-    // Mapping from tokenId to array of claim IDs
-    mapping(uint256 => uint256[]) private _tokenClaims;
-
-    // Mapping from pool ID to member address to contribution records
-    mapping(uint256 => mapping(address => ContributionRecord[]))
-        private _contributionRecords;
+    // Insurance parameters
+    InsuranceParams public params;
 
     // Events
-    event PoolCreated(uint256 indexed poolId, string name, address creator);
-    event MemberJoined(
-        uint256 indexed poolId,
-        address indexed member,
-        uint256 tokenId,
-        uint256 contribution
+    event MembershipCreated(
+        uint256 indexed membershipId,
+        address indexed owner,
+        uint256 tokenId
+    );
+    event PremiumPaid(
+        uint256 indexed membershipId,
+        uint256 amount,
+        uint256 consecutivePayments
+    );
+    event MembershipStatusUpdated(
+        uint256 indexed membershipId,
+        MembershipStatus status
     );
     event ClaimFiled(
         uint256 indexed claimId,
-        uint256 indexed poolId,
-        address indexed claimant,
-        string description
+        uint256 indexed membershipId,
+        uint256 amount
     );
     event AssessorRegistered(
         address indexed assessor,
         string name,
         string credentials
     );
-    event AssessorStatusChanged(address indexed assessor, bool active);
-    event AssessorAssigned(uint256 indexed claimId, address indexed assessor);
+    event AssessorStatusUpdated(address indexed assessor, bool isActive);
+    event AssessorSelfDeactivated(address indexed assessor);
+    event AssessorRevoked(address indexed assessor, string reason);
+    event AssessorAssignedToClaim(
+        uint256 indexed claimId,
+        address indexed assessor
+    );
+    event AssessorRemovedFromClaim(
+        uint256 indexed claimId,
+        address indexed assessor,
+        string reason
+    );
+    event ClaimReassigned(
+        uint256 indexed claimId,
+        address indexed oldAssessor,
+        address indexed newAssessor
+    );
     event ClaimAssessed(
         uint256 indexed claimId,
         address indexed assessor,
         bool approved,
-        uint256 recommendedPayout
+        uint256 amount
     );
-    event ClaimStatusChanged(uint256 indexed claimId, ClaimStatus status);
+    event ClaimReviewed(
+        uint256 indexed claimId,
+        bool approved,
+        uint256 finalAmount
+    );
     event ClaimPaid(
         uint256 indexed claimId,
         address indexed recipient,
         uint256 amount
     );
-    event AdditionalContribution(
-        uint256 indexed poolId,
-        address indexed member,
-        uint256 amount
-    );
-    event AssessorRoleRevoked(address indexed assessor);
 
     /**
      * @dev Constructor
      * @param _carNFTAddress Address of the CarNFT contract
+     * @param _minMonthlyPremium Minimum monthly premium amount
+     * @param _maxCoverageMultiplier Maximum coverage multiplier
      */
-    constructor(address _carNFTAddress) {
+    constructor(
+        address _carNFTAddress,
+        uint256 _minMonthlyPremium,
+        uint256 _maxCoverageMultiplier
+    ) {
         carNFTContract = CarNFT(_carNFTAddress);
 
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(ADMIN_ROLE, msg.sender);
-    }
-
-    // Assessor management functions
-
-    /**
-     * @dev Register a new certified assessor
-     * @param assessor Address of the assessor
-     * @param name Name of the assessor
-     * @param credentials Professional credentials
-     */
-    function registerAssessor(
-        address assessor,
-        string memory name,
-        string memory credentials
-    ) public onlyRole(ADMIN_ROLE) {
-        require(assessor != address(0), "Invalid assessor address");
-        require(bytes(name).length > 0, "Name cannot be empty");
-        require(bytes(credentials).length > 0, "Credentials cannot be empty");
-
-        _assessors[assessor] = Assessor({
-            name: name,
-            credentials: credentials,
-            registeredAt: block.timestamp,
-            active: true,
-            completedAssessments: 0
+        params = InsuranceParams({
+            minMonthlyPremium: _minMonthlyPremium,
+            maxCoverageMultiplier: _maxCoverageMultiplier,
+            assessmentTimeLimit: 7 days,
+            adminReviewTimeLimit: 3 days,
+            minConsecutivePayments: 3,
+            poolBalance: 0
         });
 
-        _grantRole(ASSESSOR_ROLE, assessor);
-
-        emit AssessorRegistered(assessor, name, credentials);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(ADMIN_ROLE, msg.sender);
     }
 
     /**
-     * @dev Set the status of an assessor (active or inactive)
-     * @param assessor Address of the assessor
-     * @param active Whether the assessor should be active
+     * @dev Create a new insurance membership
+     * @param tokenId The NFT token ID of the vehicle
      */
-    function setAssessorStatus(
-        address assessor,
-        bool active
-    ) public onlyRole(ADMIN_ROLE) {
-        require(hasRole(ASSESSOR_ROLE, assessor), "Not an assessor");
-
-        Assessor storage assessorData = _assessors[assessor];
-        assessorData.active = active;
-
-        emit AssessorStatusChanged(assessor, active);
-    }
-
-    /**
-     * @dev Revoke assessor role completely
-     * @param assessor Address of the assessor to revoke
-     */
-    function revokeAssessorRole(address assessor) public onlyRole(ADMIN_ROLE) {
-        require(hasRole(ASSESSOR_ROLE, assessor), "Not an assessor");
-
-        // Revoke the role
-        revokeRole(ASSESSOR_ROLE, assessor);
-
-        // Update the assessor's status
-        Assessor storage assessorData = _assessors[assessor];
-        assessorData.active = false;
-
-        emit AssessorRoleRevoked(assessor);
-    }
-
-    /**
-     * @dev Get assessor details
-     * @param assessor Address of the assessor
-     */
-    function getAssessorDetails(
-        address assessor
-    ) public view returns (Assessor memory) {
-        return _assessors[assessor];
-    }
-
-    // Pool management functions
-
-    /**
-     * @dev Create a new insurance pool
-     * @param name Name of the pool
-     * @param description Description of the pool
-     * @param minContribution Minimum contribution required to join
-     * @param maxCoverage Maximum coverage limit per member
-     */
-    function createPool(
-        string memory name,
-        string memory description,
-        uint256 minContribution,
-        uint256 maxCoverage
-    ) public onlyRole(ADMIN_ROLE) returns (uint256) {
-        require(
-            minContribution > 0,
-            "Minimum contribution must be greater than 0"
-        );
-        require(
-            maxCoverage > minContribution,
-            "Maximum coverage must be greater than minimum contribution"
-        );
-
-        _poolIds.increment();
-        uint256 newPoolId = _poolIds.current();
-
-        _insurancePools[newPoolId] = InsurancePool({
-            name: name,
-            description: description,
-            minContribution: minContribution,
-            maxCoverage: maxCoverage,
-            totalBalance: 0,
-            memberCount: 0,
-            createdAt: block.timestamp,
-            active: true
-        });
-
-        emit PoolCreated(newPoolId, name, msg.sender);
-
-        return newPoolId;
-    }
-
-    /**
-     * @dev Join an insurance pool
-     * @param poolId ID of the pool to join
-     * @param tokenId ID of the car NFT
-     */
-    function joinPool(
-        uint256 poolId,
-        uint256 tokenId
-    ) public payable nonReentrant {
-        InsurancePool storage pool = _insurancePools[poolId];
-        require(pool.active, "Pool is not active");
-        require(
-            msg.value >= pool.minContribution,
-            "Contribution below minimum"
-        );
+    function createMembership(uint256 tokenId) external payable nonReentrant {
         require(
             carNFTContract.ownerOf(tokenId) == msg.sender,
-            "Not the owner of the car NFT"
+            "Not the vehicle owner"
         );
+        require(msg.value >= params.minMonthlyPremium, "Insufficient premium");
 
-        // Calculate coverage limit based on contribution
-        uint256 coverageLimit = (msg.value * pool.maxCoverage) /
-            pool.minContribution;
-        if (coverageLimit > pool.maxCoverage) {
-            coverageLimit = pool.maxCoverage;
-        }
+        _membershipIds.increment();
+        uint256 membershipId = _membershipIds.current();
 
-        // Check if already a member
-        PoolMembership storage membership = _poolMemberships[poolId][
-            msg.sender
-        ];
-        if (membership.tokenId == 0) {
-            // New member
-            _poolMembers[poolId].push(msg.sender);
-            _memberPools[msg.sender].push(poolId);
-            pool.memberCount++;
-        }
-
-        // Update or create membership
-        _poolMemberships[poolId][msg.sender] = PoolMembership({
+        Membership memory newMembership = Membership({
+            owner: msg.sender,
             tokenId: tokenId,
-            contribution: msg.value,
-            coverageLimit: coverageLimit,
-            joinedAt: block.timestamp,
-            active: true
+            startDate: block.timestamp,
+            coverageAmount: msg.value * params.maxCoverageMultiplier,
+            monthlyPremium: msg.value,
+            lastPaymentDate: block.timestamp,
+            totalContributions: msg.value,
+            consecutivePayments: 1,
+            status: MembershipStatus.Active
         });
 
-        // Update pool balance
-        pool.totalBalance += msg.value;
+        memberships[membershipId] = newMembership;
+        membershipsByOwner[msg.sender].push(membershipId);
+        params.poolBalance += msg.value;
 
-        // Record the initial contribution
-        _contributionRecords[poolId][msg.sender].push(
-            ContributionRecord({
-                timestamp: block.timestamp,
-                amount: msg.value,
-                poolId: poolId,
-                contributionType: "Initial"
-            })
+        emit MembershipCreated(membershipId, msg.sender, tokenId);
+        emit PremiumPaid(membershipId, msg.value, 1);
+    }
+    /**
+     * @dev Pay monthly premium for existing membership
+     * @param membershipId The ID of the membership
+     */
+    function payPremium(uint256 membershipId) external payable nonReentrant {
+        Membership storage membership = memberships[membershipId];
+        require(membership.owner == msg.sender, "Not the membership owner");
+        require(
+            membership.status != MembershipStatus.Inactive,
+            "Membership inactive"
+        );
+        require(msg.value >= membership.monthlyPremium, "Insufficient premium");
+
+        // Update consecutive payments
+        if (block.timestamp <= membership.lastPaymentDate + 30 days) {
+            membership.consecutivePayments++;
+        } else {
+            membership.consecutivePayments = 1;
+        }
+
+        membership.lastPaymentDate = block.timestamp;
+        membership.totalContributions += msg.value;
+        membership.status = MembershipStatus.Active;
+
+        // Update coverage based on contribution history
+        membership.coverageAmount = calculateCoverage(membership);
+        params.poolBalance += msg.value;
+
+        emit PremiumPaid(
+            membershipId,
+            msg.value,
+            membership.consecutivePayments
+        );
+    }
+
+    /**
+     * @dev Register a new assessor (Admin only)
+     */
+    function registerAssessor(
+        address assessorAddress,
+        string memory name,
+        string memory credentials,
+        string memory specialization
+    ) external onlyRole(ADMIN_ROLE) {
+        require(assessorAddress != address(0), "Invalid address");
+        require(
+            !hasRole(ASSESSOR_ROLE, assessorAddress),
+            "Already an assessor"
         );
 
-        emit MemberJoined(poolId, msg.sender, tokenId, msg.value);
+        Assessor memory newAssessor = Assessor({
+            name: name,
+            credentials: credentials,
+            specialization: specialization,
+            registrationDate: block.timestamp,
+            totalAssessments: 0,
+            isActive: true,
+            reputationScore: 0
+        });
+
+        assessors[assessorAddress] = newAssessor;
+        _grantRole(ASSESSOR_ROLE, assessorAddress);
+
+        emit AssessorRegistered(assessorAddress, name, credentials);
+    }
+
+    /**
+     * @dev Allow assessor to deactivate themselves if they have no active claims
+     */
+    function deactivateSelf() external {
+        require(hasRole(ASSESSOR_ROLE, msg.sender), "Not an assessor");
+        require(assessors[msg.sender].isActive, "Already inactive");
+        require(
+            assessorActiveClaims[msg.sender].length == 0,
+            "Has active claims"
+        );
+
+        assessors[msg.sender].isActive = false;
+        emit AssessorSelfDeactivated(msg.sender);
     }
 
     /**
      * @dev File an insurance claim
-     * @param poolId ID of the insurance pool
-     * @param amount Claim amount
-     * @param description Detailed description of the incident
-     * @param evidenceURI IPFS URI to evidence documents and images
      */
     function fileClaim(
-        uint256 poolId,
+        uint256 membershipId,
         uint256 amount,
         string memory description,
-        string memory evidenceURI
-    ) public nonReentrant returns (uint256) {
-        InsurancePool storage pool = _insurancePools[poolId];
-        require(pool.active, "Pool is not active");
-
-        PoolMembership storage membership = _poolMemberships[poolId][
-            msg.sender
-        ];
-        require(membership.active, "Not an active member of this pool");
+        string memory evidenceUri
+    ) external nonReentrant returns (uint256) {
+        Membership storage membership = memberships[membershipId];
+        require(membership.owner == msg.sender, "Not the membership owner");
         require(
-            amount <= membership.coverageLimit,
-            "Claim amount exceeds coverage limit"
+            membership.status == MembershipStatus.Active,
+            "Membership not active"
         );
+        require(amount <= membership.coverageAmount, "Amount exceeds coverage");
         require(
-            amount <= pool.totalBalance,
-            "Claim amount exceeds pool balance"
-        );
-
-        // Check if the car exists and is owned by the claimant
-        uint256 tokenId = membership.tokenId;
-        require(
-            carNFTContract.ownerOf(tokenId) == msg.sender,
-            "Not the owner of the car NFT"
+            block.timestamp <= membership.lastPaymentDate + 30 days,
+            "Coverage lapsed"
         );
 
         _claimIds.increment();
-        uint256 newClaimId = _claimIds.current();
+        uint256 claimId = _claimIds.current();
 
-        // Get the member's contribution percentage of the pool
-        uint256 contributionPercentage = (membership.contribution * 100) /
-            pool.totalBalance;
-
-        // Calculate the claim amount based on contribution percentage and pool balance
-        uint256 claimAmount = (contributionPercentage * pool.totalBalance) /
-            100;
-
-        // Cap the claim amount based on coverage limit and requested amount
-        uint256 maxClaimAmount = (claimAmount < membership.coverageLimit)
-            ? claimAmount
-            : membership.coverageLimit;
-        maxClaimAmount = (maxClaimAmount < amount) ? maxClaimAmount : amount;
-
-        _insuranceClaims[newClaimId] = InsuranceClaim({
-            poolId: poolId,
-            tokenId: tokenId,
+        claims[claimId] = Claim({
+            membershipId: membershipId,
             claimant: msg.sender,
-            amount: maxClaimAmount,
+            requestedAmount: amount,
             description: description,
-            evidenceURI: evidenceURI,
-            createdAt: block.timestamp,
+            evidenceUri: evidenceUri,
+            filingDate: block.timestamp,
             status: ClaimStatus.Pending,
             assignedAssessor: address(0),
-            recommendedPayout: 0,
-            payoutAmount: 0,
-            rejectionReason: ""
+            assignmentDate: 0,
+            isAssessorWorking: false,
+            assessorApprovedAmount: 0,
+            assessorNotes: "",
+            assessmentDate: 0,
+            adminApprovedAmount: 0,
+            adminNotes: "",
+            adminReviewDate: 0,
+            finalPaidAmount: 0,
+            paymentDate: 0
         });
 
-        _tokenClaims[tokenId].push(newClaimId);
-
-        // Store the contribution-adjusted amount
-        _insuranceClaims[newClaimId].amount = maxClaimAmount;
-
-        emit ClaimFiled(newClaimId, poolId, msg.sender, description);
-
-        return newClaimId;
+        claimsByMembership[membershipId].push(claimId);
+        emit ClaimFiled(claimId, membershipId, amount);
+        return claimId;
     }
 
     /**
-     * @dev Assign an assessor to a claim
-     * @param claimId ID of the claim
-     * @param assessor Address of the assessor
+     * @dev Assign assessor to claim (Admin only)
      */
-    function assignAssessor(
+    function assignAssessorToClaim(
         uint256 claimId,
-        address assessor
-    ) public onlyRole(ADMIN_ROLE) {
-        InsuranceClaim storage claim = _insuranceClaims[claimId];
-        require(claim.status == ClaimStatus.Pending, "Claim is not pending");
-        require(hasRole(ASSESSOR_ROLE, assessor), "Not a certified assessor");
-        require(_assessors[assessor].active, "Assessor is not active");
+        address assessorAddress
+    ) external onlyRole(ADMIN_ROLE) {
+        require(hasRole(ASSESSOR_ROLE, assessorAddress), "Not an assessor");
+        require(assessors[assessorAddress].isActive, "Assessor not active");
 
-        claim.assignedAssessor = assessor;
+        Claim storage claim = claims[claimId];
+        require(claim.status == ClaimStatus.Pending, "Claim not pending");
+        require(claim.assignedAssessor == address(0), "Already assigned");
+
+        claim.assignedAssessor = assessorAddress;
+        claim.assignmentDate = block.timestamp;
+        claim.isAssessorWorking = true;
         claim.status = ClaimStatus.UnderAssessment;
 
-        emit AssessorAssigned(claimId, assessor);
-        emit ClaimStatusChanged(claimId, ClaimStatus.UnderAssessment);
+        assessorActiveClaims[assessorAddress].push(claimId);
+        claimAssessorHistory[claimId].push(assessorAddress);
+
+        emit AssessorAssignedToClaim(claimId, assessorAddress);
     }
 
     /**
-     * @dev Submit an assessment for a claim
-     * @param claimId ID of the claim
-     * @param approved Whether the claim is approved
-     * @param recommendedPayout Recommended payout amount
-     * @param evaluationNotes Notes about the assessment
+     * @dev Remove assessor from claim (Admin only)
      */
-    function submitAssessment(
+    function removeAssessorFromClaim(
         uint256 claimId,
-        bool approved,
-        uint256 recommendedPayout,
-        string memory evaluationNotes
-    ) public {
-        InsuranceClaim storage claim = _insuranceClaims[claimId];
+        string memory reason
+    ) external onlyRole(ADMIN_ROLE) {
+        Claim storage claim = claims[claimId];
+        require(claim.assignedAssessor != address(0), "No assessor assigned");
         require(
             claim.status == ClaimStatus.UnderAssessment,
-            "Claim is not under assessment"
-        );
-        require(
-            claim.assignedAssessor == msg.sender,
-            "Not the assigned assessor"
-        );
-        require(hasRole(ASSESSOR_ROLE, msg.sender), "Not a certified assessor");
-
-        if (approved) {
-            require(
-                recommendedPayout > 0,
-                "Recommended payout must be greater than 0"
-            );
-            require(
-                recommendedPayout <= claim.amount,
-                "Payout cannot exceed claim amount"
-            );
-
-            InsurancePool storage pool = _insurancePools[claim.poolId];
-            require(
-                recommendedPayout <= pool.totalBalance,
-                "Payout exceeds pool balance"
-            );
-
-            claim.recommendedPayout = recommendedPayout;
-            claim.status = ClaimStatus.AssessorApproved;
-        } else {
-            claim.status = ClaimStatus.AssessorRejected;
-            claim.rejectionReason = evaluationNotes;
-        }
-
-        // Record the evaluation
-        _claimEvaluations[claimId].push(
-            AssessorEvaluation({
-                assessor: msg.sender,
-                recommendedPayout: recommendedPayout,
-                evaluationNotes: evaluationNotes,
-                timestamp: block.timestamp,
-                approved: approved
-            })
+            "Not under assessment"
         );
 
-        // Update assessor statistics
-        _assessors[msg.sender].completedAssessments++;
+        address removedAssessor = claim.assignedAssessor;
+        removeFromActiveClaimsList(removedAssessor, claimId);
 
-        emit ClaimAssessed(claimId, msg.sender, approved, recommendedPayout);
-        emit ClaimStatusChanged(claimId, claim.status);
+        claim.assignedAssessor = address(0);
+        claim.isAssessorWorking = false;
+        claim.status = ClaimStatus.Pending;
+
+        emit AssessorRemovedFromClaim(claimId, removedAssessor, reason);
     }
 
     /**
-     * @dev Finalize an assessor-approved claim
-     * @param claimId ID of the claim
+     * @dev Reassign claim to new assessor (Admin only)
      */
-    function finalizeAssessorApprovedClaim(
-        uint256 claimId
-    ) public onlyRole(ADMIN_ROLE) {
-        InsuranceClaim storage claim = _insuranceClaims[claimId];
+    function reassignClaim(
+        uint256 claimId,
+        address newAssessorAddress
+    ) external onlyRole(ADMIN_ROLE) {
+        require(hasRole(ASSESSOR_ROLE, newAssessorAddress), "Not an assessor");
+        require(assessors[newAssessorAddress].isActive, "Assessor not active");
+
+        Claim storage claim = claims[claimId];
+        address oldAssessor = claim.assignedAssessor;
+        require(oldAssessor != newAssessorAddress, "Same assessor");
+
+        if (oldAssessor != address(0)) {
+            removeFromActiveClaimsList(oldAssessor, claimId);
+        }
+
+        claim.assignedAssessor = newAssessorAddress;
+        claim.assignmentDate = block.timestamp;
+        claim.isAssessorWorking = true;
+        claim.status = ClaimStatus.UnderAssessment;
+
+        assessorActiveClaims[newAssessorAddress].push(claimId);
+        claimAssessorHistory[claimId].push(newAssessorAddress);
+
+        emit ClaimReassigned(claimId, oldAssessor, newAssessorAddress);
+    }
+
+    /**
+     * @dev Assess claim (Assessor only)
+     */
+    function assessClaim(
+        uint256 claimId,
+        bool approved,
+        uint256 amount,
+        string memory notes
+    ) external {
+        require(hasRole(ASSESSOR_ROLE, msg.sender), "Not an assessor");
+        require(assessors[msg.sender].isActive, "Assessor not active");
+
+        Claim storage claim = claims[claimId];
+        require(
+            claim.assignedAssessor == msg.sender,
+            "Not assigned to this claim"
+        );
+        require(
+            claim.status == ClaimStatus.UnderAssessment,
+            "Not under assessment"
+        );
+        require(claim.isAssessorWorking, "Assessment work stopped");
+
+        removeFromActiveClaimsList(msg.sender, claimId);
+
+        claim.status = approved
+            ? ClaimStatus.AssessorApproved
+            : ClaimStatus.AssessorRejected;
+        claim.assessorApprovedAmount = amount;
+        claim.assessorNotes = notes;
+        claim.assessmentDate = block.timestamp;
+        claim.isAssessorWorking = false;
+
+        assessors[msg.sender].totalAssessments++;
+        assessors[msg.sender].reputationScore++;
+
+        emit ClaimAssessed(claimId, msg.sender, approved, amount);
+    }
+
+    /**
+     * @dev Review and finalize claim (Admin only)
+     */
+    function reviewClaim(
+        uint256 claimId,
+        bool approved,
+        uint256 finalAmount,
+        string memory notes
+    ) external onlyRole(ADMIN_ROLE) {
+        Claim storage claim = claims[claimId];
         require(
             claim.status == ClaimStatus.AssessorApproved,
-            "Claim is not assessor-approved"
+            "Not assessor approved"
+        );
+        require(
+            finalAmount <= claim.requestedAmount,
+            "Exceeds requested amount"
         );
 
-        claim.status = ClaimStatus.Approved;
-        emit ClaimStatusChanged(claimId, ClaimStatus.Approved);
+        claim.status = approved
+            ? ClaimStatus.AdminApproved
+            : ClaimStatus.AdminRejected;
+        claim.adminApprovedAmount = finalAmount;
+        claim.adminNotes = notes;
+        claim.adminReviewDate = block.timestamp;
 
-        // Process payment
-        InsurancePool storage pool = _insurancePools[claim.poolId];
-        uint256 payoutAmount = claim.recommendedPayout;
+        emit ClaimReviewed(claimId, approved, finalAmount);
 
-        pool.totalBalance -= payoutAmount;
-        claim.payoutAmount = payoutAmount;
+        if (approved) {
+            processPayout(claimId);
+        }
+    }
+
+    /**
+     * @dev Process claim payout
+     */
+    function processPayout(uint256 claimId) internal {
+        Claim storage claim = claims[claimId];
+        require(claim.status == ClaimStatus.AdminApproved, "Not approved");
+        require(
+            claim.adminApprovedAmount <= params.poolBalance,
+            "Insufficient pool balance"
+        );
+
+        uint256 payoutAmount = claim.adminApprovedAmount;
+        params.poolBalance -= payoutAmount;
+
         claim.status = ClaimStatus.Paid;
+        claim.finalPaidAmount = payoutAmount;
+        claim.paymentDate = block.timestamp;
 
-        emit ClaimStatusChanged(claimId, ClaimStatus.Paid);
-        emit ClaimPaid(claimId, claim.claimant, payoutAmount);
-
-        // Transfer funds to claimant
         (bool success, ) = payable(claim.claimant).call{value: payoutAmount}(
             ""
         );
-        require(success, "Transfer failed");
+        require(success, "Payment failed");
+
+        emit ClaimPaid(claimId, claim.claimant, payoutAmount);
     }
 
     /**
-     * @dev Reject a claim even if assessor approved it
-     * @param claimId ID of the claim
+     * @dev Calculate coverage amount based on contribution history
      */
-    function rejectClaim(uint256 claimId) public onlyRole(ADMIN_ROLE) {
-        InsuranceClaim storage claim = _insuranceClaims[claimId];
-        require(
-            claim.status == ClaimStatus.AssessorApproved ||
-                claim.status == ClaimStatus.AssessorRejected,
-            "Claim is not assessed yet"
-        );
-
-        claim.status = ClaimStatus.Rejected;
-        emit ClaimStatusChanged(claimId, ClaimStatus.Rejected);
+    function calculateCoverage(
+        Membership memory membership
+    ) internal pure returns (uint256) {
+        uint256 baseMultiplier = 2;
+        uint256 loyaltyBonus = (membership.consecutivePayments * 5) / 100; // 5% per consecutive payment
+        uint256 totalMultiplier = baseMultiplier + loyaltyBonus;
+        return membership.totalContributions * totalMultiplier;
     }
 
     /**
-     * @dev Get assessor evaluations for a claim
-     * @param claimId ID of the claim
+     * @dev Remove claim from assessor's active claims list
      */
-    function getClaimEvaluations(
+    function removeFromActiveClaimsList(
+        address assessorAddress,
         uint256 claimId
-    ) public view returns (AssessorEvaluation[] memory) {
-        return _claimEvaluations[claimId];
-    }
-
-    /**
-     * @dev Get claim details
-     * @param claimId ID of the claim
-     */
-    function getClaimDetails(
-        uint256 claimId
-    ) public view returns (InsuranceClaim memory) {
-        return _insuranceClaims[claimId];
-    }
-
-    /**
-     * @dev Get all claims for a car
-     * @param tokenId ID of the car NFT
-     */
-    function getCarClaims(
-        uint256 tokenId
-    ) public view returns (uint256[] memory) {
-        return _tokenClaims[tokenId];
-    }
-
-    /**
-     * @dev Get pool details
-     * @param poolId ID of the pool
-     */
-    function getPoolDetails(
-        uint256 poolId
-    ) public view returns (InsurancePool memory) {
-        return _insurancePools[poolId];
-    }
-
-    /**
-     * @dev Get membership details
-     * @param poolId ID of the pool
-     * @param member Address of the member
-     */
-    function getMembershipDetails(
-        uint256 poolId,
-        address member
-    ) public view returns (PoolMembership memory) {
-        return _poolMemberships[poolId][member];
-    }
-
-    /**
-     * @dev Get all pools a member is part of
-     * @param member Address of the member
-     */
-    function getMemberPools(
-        address member
-    ) public view returns (uint256[] memory) {
-        return _memberPools[member];
-    }
-
-    /**
-     * @dev Leave an insurance pool
-     * @param poolId ID of the pool to leave
-     */
-    function leavePool(uint256 poolId) public nonReentrant {
-        PoolMembership storage membership = _poolMemberships[poolId][
-            msg.sender
-        ];
-        require(membership.active, "Not an active member of this pool");
-
-        // Check for any pending claims
-        uint256 tokenId = membership.tokenId;
-        for (uint256 i = 0; i < _tokenClaims[tokenId].length; i++) {
-            uint256 claimId = _tokenClaims[tokenId][i];
-            InsuranceClaim storage claim = _insuranceClaims[claimId];
-            if (claim.poolId == poolId) {
-                require(
-                    claim.status != ClaimStatus.Pending &&
-                        claim.status != ClaimStatus.UnderAssessment,
-                    "Cannot leave with pending or under assessment claims"
-                );
+    ) internal {
+        uint256[] storage activeClaims = assessorActiveClaims[assessorAddress];
+        for (uint256 i = 0; i < activeClaims.length; i++) {
+            if (activeClaims[i] == claimId) {
+                activeClaims[i] = activeClaims[activeClaims.length - 1];
+                activeClaims.pop();
+                break;
             }
         }
-
-        // Deactivate membership
-        membership.active = false;
-
-        // Adjust member count
-        InsurancePool storage pool = _insurancePools[poolId];
-        pool.memberCount--;
-
-        // Calculate refund amount (95% of contribution)
-        uint256 refundAmount = (membership.contribution * 95) / 100;
-
-        // Calculate admin fee (5% of contribution)
-        uint256 adminFee = membership.contribution - refundAmount;
-
-        if (refundAmount > 0 && refundAmount <= pool.totalBalance) {
-            pool.totalBalance -= membership.contribution;
-
-            // Transfer refund to member
-            (bool successRefund, ) = payable(msg.sender).call{
-                value: refundAmount
-            }("");
-            require(successRefund, "Refund transfer failed");
-
-            // Transfer fee to admin
-            (bool successFee, ) = payable(
-                this.getRoleMember(DEFAULT_ADMIN_ROLE, 0)
-            ).call{value: adminFee}("");
-            require(successFee, "Admin fee transfer failed");
-        }
     }
 
-    /**
-     * @dev Make an additional contribution to a pool you're already a member of
-     * @param poolId ID of the pool to contribute to
-     */
-    function contributeToPool(uint256 poolId) public payable nonReentrant {
-        require(_insurancePools[poolId].active, "Pool is not active");
-
-        PoolMembership storage membership = _poolMemberships[poolId][
-            msg.sender
-        ];
-        require(membership.active, "Not a member of this pool");
-
-        // Update the pool balance
-        _insurancePools[poolId].totalBalance += msg.value;
-
-        // Update the member's contribution
-        membership.contribution += msg.value;
-
-        // Update coverage limit based on new contribution
-        membership.coverageLimit =
-            (membership.contribution * _insurancePools[poolId].maxCoverage) /
-            _insurancePools[poolId].minContribution;
-
-        // Record the contribution
-        _contributionRecords[poolId][msg.sender].push(
-            ContributionRecord({
-                timestamp: block.timestamp,
-                amount: msg.value,
-                poolId: poolId,
-                contributionType: "Monthly"
-            })
-        );
-
-        // Emit an event for the contribution
-        emit AdditionalContribution(poolId, msg.sender, msg.value);
+    // Getter functions
+    function getMembershipsByOwner(
+        address owner
+    ) external view returns (uint256[] memory) {
+        return membershipsByOwner[owner];
     }
 
-    /**
-     * @dev Get contribution history for a member
-     * @param poolId ID of the pool
-     * @param member Address of the member
-     */
-    function getMemberContributionHistory(
-        uint256 poolId,
-        address member
-    ) public view returns (ContributionRecord[] memory) {
-        return _contributionRecords[poolId][member];
+    function getClaimsByMembership(
+        uint256 membershipId
+    ) external view returns (uint256[] memory) {
+        return claimsByMembership[membershipId];
+    }
+
+    function getAssessorActiveClaims(
+        address assessorAddress
+    ) external view returns (uint256[] memory) {
+        return assessorActiveClaims[assessorAddress];
+    }
+
+    function getClaimAssessorHistory(
+        uint256 claimId
+    ) external view returns (address[] memory) {
+        return claimAssessorHistory[claimId];
+    }
+
+    // Receive function to accept ETH payments
+    receive() external payable {
+        params.poolBalance += msg.value;
+    }
+
+    // Fallback function
+    fallback() external payable {
+        params.poolBalance += msg.value;
     }
 }

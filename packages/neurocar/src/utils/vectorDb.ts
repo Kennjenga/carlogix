@@ -1,6 +1,4 @@
-// src/utils/vectorDb.ts
 import { createClient } from '@supabase/supabase-js';
-import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 
 // Initialize Supabase client with proper error handling for server-side
@@ -29,39 +27,52 @@ const getEmbeddings = () => {
   });
 };
 
-// Create vector store (lazily initialized to prevent issues during build time)
-const getVectorStore = async () => {
-  const supabase = getSupabaseClient();
-  const embeddings = getEmbeddings();
-  
-  return new SupabaseVectorStore(embeddings, {
-    client: supabase,
-    tableName: 'car_repair_knowledge',
-    queryName: 'match_car_repair_knowledge',
-  });
-};
-
 export async function searchRepairKnowledge(query: string, carMake: string, carModel: string, carYear: string) {
   try {
     // Normalize inputs to improve matching
     const normalizedMake = carMake.toLowerCase().trim();
     const normalizedModel = carModel.toLowerCase().trim();
     const normalizedQuery = query.toLowerCase().trim();
-    
+
     // Enhance query with car details for better matching
     const enhancedQuery = `${normalizedMake} ${normalizedModel} ${carYear} ${normalizedQuery}`;
-    
-    // Get vector store and search
-    const vectorStore = await getVectorStore();
-    
-    // Search with metadata filter option if needed
-    const results = await vectorStore.similaritySearch(enhancedQuery, 5, {
-      make: normalizedMake,
-      model: normalizedModel,
+
+    // Get necessary clients
+    const supabase = getSupabaseClient();
+    const embeddings = getEmbeddings();
+
+    // Generate embedding for the query
+    const queryEmbedding = await embeddings.embedQuery(enhancedQuery);
+
+    // Perform similarity search directly with Supabase
+    const { data: results, error } = await supabase.rpc('match_documents', {
+      query_embedding: queryEmbedding,
+      match_threshold: 0.5,  // Adjust as needed
+      match_count: 5,        // Return top 5 matches
+      filter_make: normalizedMake,
+      filter_model: normalizedModel
     });
-    
-    console.log(`Found ${results.length} relevant repair knowledge entries`);
-    return results;
+
+    if (error) {
+      console.error('Error searching documents:', error);
+      return [];
+    }
+
+    // Transform results to match LangChain Document format
+    interface Result {
+      content: string;
+      doc_metadata: { make: string; model: string; [key: string]: unknown };
+      similarity: number;
+    }
+
+    const documents = results.map((result: Result) => ({
+      pageContent: result.content,
+      metadata: result.doc_metadata,
+      score: result.similarity
+    }));
+
+    console.log(`Found ${documents.length} relevant repair knowledge entries`);
+    return documents;
   } catch (error) {
     console.error('Error searching repair knowledge:', error);
     if (error instanceof Error) {
@@ -69,4 +80,5 @@ export async function searchRepairKnowledge(query: string, carMake: string, carM
     }
     return [];
   }
-}
+} 
+

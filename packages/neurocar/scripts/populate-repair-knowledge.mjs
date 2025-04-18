@@ -1,9 +1,6 @@
-// scripts/populate-repair-knowledge.mjs
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { createClient } from "@supabase/supabase-js";
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { Document } from "@langchain/core/documents";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
@@ -23,14 +20,6 @@ const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 if (!supabaseUrl || !supabaseKey) {
   console.error(
     "Missing Supabase credentials. Check your environment variables."
-  );
-  console.log(
-    "NEXT_PUBLIC_SUPABASE_URL:",
-    process.env.NEXT_PUBLIC_SUPABASE_URL ? "Set" : "Not set"
-  );
-  console.log(
-    "SUPABASE_SERVICE_KEY:",
-    process.env.SUPABASE_SERVICE_KEY ? "Set" : "Not set"
   );
   process.exit(1);
 }
@@ -69,8 +58,8 @@ async function populateVectorStore() {
 
     console.log(`Found ${repairData.length} repair knowledge entries`);
 
-    // Convert to LangChain documents
-    const documents = repairData.map((entry) => {
+    // Insert documents manually instead of using LangChain
+    for (const entry of repairData) {
       const content = `Make: ${entry.make}
 Model: ${entry.model}
 Year Range: ${entry.year_range}
@@ -84,30 +73,39 @@ Requires Immediate Attention: ${
       }
 Estimated Cost Range: ${entry.cost_range || "Unknown"}`;
 
-      return new Document({
-        pageContent: content,
-        metadata: {
-          id: entry.id,
-          make: entry.make.toLowerCase(),
-          model: entry.model.toLowerCase(),
-          year_range: entry.year_range,
-          system: entry.system,
-        },
+      const metadata = {
+        make: entry.make.toLowerCase(),
+        model: entry.model.toLowerCase(),
+        year_range: entry.year_range,
+        original_id: entry.id,
+        system: entry.system,
+      };
+
+      // Generate embedding
+      console.log(`Generating embedding for ${entry.make} ${entry.model}...`);
+      const embeddingResponse = await embeddings.embedQuery(content);
+
+      // Insert into Supabase
+      console.log(`Inserting ${entry.make} ${entry.model} into database...`);
+      const { error } = await supabase.from("car_repair_knowledge").insert({
+        content: content,
+        embedding: embeddingResponse,
+        doc_metadata: metadata, // Using doc_metadata as column name
       });
-    });
 
-    console.log("Creating vector embeddings and storing in Supabase...");
+      if (error) {
+        console.error(
+          `Error inserting document for ${entry.make} ${entry.model}:`,
+          error
+        );
+      } else {
+        console.log(
+          `Successfully inserted repair knowledge for ${entry.make} ${entry.model}`
+        );
+      }
+    }
 
-    // Store documents in Supabase with explicit configuration
-    await SupabaseVectorStore.fromDocuments(documents, embeddings, {
-      client: supabase,
-      tableName: "car_repair_knowledge",
-      queryName: "match_car_repair_knowledge",
-    });
-
-    console.log(
-      `Successfully added ${documents.length} documents to vector store`
-    );
+    console.log(`Successfully processed ${repairData.length} documents`);
   } catch (error) {
     console.error("Error populating vector store:", error);
     if (error instanceof Error) {
