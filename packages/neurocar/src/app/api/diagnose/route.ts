@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     
     if (useRag) {
       // Search knowledge base for relevant information
-      const searchResults = await searchRepairKnowledge(
+      const searchResults: { pageContent: string }[] = await searchRepairKnowledge(
         userQuery,
         make,
         model,
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       if (relevantSources > 0) {
         context += "\n\nRelevant Repair Knowledge:";
         
-        searchResults.forEach((doc, index) => {
+        searchResults.forEach((doc: { pageContent: string }, index) => {
           context += `\n${index + 1}. ${doc.pageContent}`;
         });
       }
