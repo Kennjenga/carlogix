@@ -79,8 +79,13 @@ export default function Dashboard() {
   // Handle car minting
   const handleMintCar = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!address) {
+      alert("Please connect your wallet before minting a vehicle NFT");
+      return;
+    }
+
     if (
-      !address ||
       !mintFormData.make ||
       !mintFormData.model ||
       !mintFormData.year ||
@@ -234,9 +239,16 @@ export default function Dashboard() {
                 My Vehicles
               </h2>
               <button
-                onClick={() => setShowMintModal(true)}
-                className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+                onClick={() =>
+                  address
+                    ? setShowMintModal(true)
+                    : alert("Please connect your wallet first")
+                }
+                className={`p-2 ${
+                  address ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400"
+                } text-white rounded-full transition-colors`}
                 aria-label="Add new vehicle"
+                disabled={!address}
               >
                 <Plus size={16} />
               </button>
@@ -273,10 +285,19 @@ export default function Dashboard() {
                 <Car size={40} className="mx-auto text-gray-300 mb-2" />
                 <p className="text-gray-500">No vehicles found</p>
                 <button
-                  onClick={() => setShowMintModal(true)}
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  onClick={() =>
+                    address
+                      ? setShowMintModal(true)
+                      : alert("Please connect your wallet first")
+                  }
+                  className={`mt-4 px-4 py-2 ${
+                    address ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400"
+                  } text-white rounded-md transition-colors`}
+                  disabled={!address}
                 >
-                  Add Your First Vehicle
+                  {address
+                    ? "Add Your First Vehicle"
+                    : "Connect Wallet to Add Vehicle"}
                 </button>
               </div>
             )}
@@ -425,8 +446,16 @@ export default function Dashboard() {
                 Select a vehicle from the list or add a new one to get started.
               </p>
               <button
-                onClick={() => setShowMintModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                onClick={() =>
+                  address
+                    ? setShowMintModal(true)
+                    : alert("Please connect your wallet first")
+                }
+                className={`p-2 ${
+                  address ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400"
+                } text-white rounded-full transition-colors px-4`}
+                aria-label="Add new vehicle"
+                disabled={!address}
               >
                 Add New Vehicle
               </button>
