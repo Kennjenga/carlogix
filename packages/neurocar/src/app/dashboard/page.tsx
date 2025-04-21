@@ -11,6 +11,7 @@ import {
   Shield,
   FileText,
   Loader,
+  QrCode,
   // ChevronLeft,
   // ChevronRight,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import { useUserCars } from "@/blockchain/hooks/useUserCars";
 import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
 // import { useCarInsuranceData } from "@/blockchain/hooks/useCarInsurance";
 import IPFSUpload from "./_components/IPFSUpload";
+import QRCode from "react-qr-code";
 
 export default function Dashboard() {
   const { address } = useAccount();
@@ -31,6 +33,7 @@ export default function Dashboard() {
   const [mintLoading, setMintLoading] = useState(false);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
   const [issueLoading, setIssueLoading] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   // Form states
   const [mintFormData, setMintFormData] = useState({
@@ -194,6 +197,34 @@ export default function Dashboard() {
     }
   };
 
+  // Generate vehicle data URL for QR code
+  const generateVehicleDataURL = (car: CarWithId) => {
+    // Create a data object with key vehicle information
+    const vehicleData = {
+      id: car.id.toString(), // Convert BigInt to string
+      make: car.make,
+      model: car.model,
+      year: car.year,
+      vin: car.vin,
+      mileage: car.mileage,
+      registrationNumber: car.registrationNumber || "N/A",
+      owner: address,
+      tokenId: car.id.toString(), // Convert BigInt to string
+      issueDate: new Date().toISOString(),
+      imageURI: car.metadataURI || "" // Include the car image URI
+    };
+
+    // Custom BigInt serialization
+    const stringifiedData = JSON.stringify(vehicleData, (key, value) => 
+      typeof value === 'bigint' ? value.toString() : value
+    );
+
+    // Convert to a URL-safe string that can be shared
+    return `${window.location.origin}/vehicle/${
+      car.id
+    }?data=${encodeURIComponent(stringifiedData)}`;
+  };
+
   // Loading state
   if (carsLoading) {
     return (
@@ -348,6 +379,13 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 justify-end">
+                    <button
+                      onClick={() => setShowQRModal(true)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                      <QrCode size={16} className="mr-2" />
+                      Generate QR Code
+                    </button>
                     <button
                       onClick={() => setShowMaintenanceModal(true)}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
@@ -853,6 +891,67 @@ export default function Dashboard() {
                   ) : (
                     "Report Issue"
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRModal && selectedCar && (
+        <div className="fixed inset-0 bg-slate-400 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white bg-opacity-90 backdrop-filter backdrop-blur-md rounded-lg max-w-md w-full max-h-[90vh] flex flex-col shadow-xl">
+            <div className="p-6 border-b border-gray-200 bg-white bg-opacity-70">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Vehicle QR Code
+              </h2>
+            </div>
+
+            {/* QR Code display area */}
+            <div className="p-6 overflow-y-auto flex-grow flex flex-col items-center">
+              <div className="mb-4 text-center">
+                <h3 className="font-medium text-lg text-gray-800">
+                  {selectedCar.make} {selectedCar.model} ({selectedCar.year})
+                </h3>
+                <p className="text-gray-500">VIN: {selectedCar.vin}</p>
+              </div>
+
+              <div className="p-4 bg-white rounded-lg shadow-md mb-4">
+                <QRCode
+                  id="vehicle-qr-code"
+                  value={generateVehicleDataURL(selectedCar)}
+                  size={200}
+                  level="H"
+                />
+              </div>
+
+              <p className="text-sm text-gray-600 text-center">
+                Scan this QR code to access vehicle information
+              </p>
+            </div>
+
+            {/* Footer with buttons */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50 bg-opacity-70 backdrop-filter backdrop-blur-sm rounded-b-lg">
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowQRModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(generateVehicleDataURL(selectedCar))
+                      .then(() => alert("Vehicle info URL copied to clipboard"))
+                      .catch((err) => console.error("Failed to copy URL", err));
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Copy Link
                 </button>
               </div>
             </div>
