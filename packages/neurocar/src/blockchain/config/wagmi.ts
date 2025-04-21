@@ -52,7 +52,7 @@ export const config = getDefaultConfig({
     },
   ],
   chains: [
-    sepolia,
+    // sepolia,
     customFujiTestnet  // Use the custom chain definition
   ],
   transports: {
