@@ -26,6 +26,27 @@ import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
 import IPFSUpload from "./_components/IPFSUpload";
 import QRCode from "react-qr-code";
 
+// Helper function to properly format IPFS URLs
+const formatIPFSUrl = (ipfsUri: string | undefined): string => {
+  if (!ipfsUri) return "";
+
+  // Log the original URI for debugging
+  console.log("Original image URI:", ipfsUri);
+
+  // Simply replace the IPFS gateway with the Pinata gateway
+  if (ipfsUri.includes("https://ipfs.io/ipfs/")) {
+    const formattedUrl = ipfsUri.replace(
+      "https://ipfs.io/ipfs/",
+      "https://azure-changing-rabbit-642.mypinata.cloud/ipfs/"
+    );
+    console.log("Formatted to Pinata gateway:", formattedUrl);
+    return formattedUrl;
+  }
+
+  // Return the original URI if it doesn't use ipfs.io gateway
+  return ipfsUri;
+};
+
 export default function Dashboard() {
   const { address } = useAccount();
   const [selectedCar, setSelectedCar] = useState<CarWithId | null>(null);
@@ -211,12 +232,12 @@ export default function Dashboard() {
       owner: address,
       tokenId: car.id.toString(), // Convert BigInt to string
       issueDate: new Date().toISOString(),
-      imageURI: car.metadataURI || "" // Include the car image URI
+      imageURI: car.metadataURI || "", // Include the car image URI
     };
 
     // Custom BigInt serialization
-    const stringifiedData = JSON.stringify(vehicleData, (key, value) => 
-      typeof value === 'bigint' ? value.toString() : value
+    const stringifiedData = JSON.stringify(vehicleData, (key, value) =>
+      typeof value === "bigint" ? value.toString() : value
     );
 
     // Convert to a URL-safe string that can be shared
@@ -346,10 +367,7 @@ export default function Dashboard() {
                     {selectedCar.metadataURI ? (
                       <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-100">
                         <Image
-                          src={selectedCar.metadataURI.replace(
-                            "ipfs://",
-                            "https://ipfs.io/ipfs/"
-                          )}
+                          src={formatIPFSUrl(selectedCar.metadataURI)}
                           alt={`${selectedCar.make} ${selectedCar.model}`}
                           className="w-full h-full object-cover"
                           width={64}

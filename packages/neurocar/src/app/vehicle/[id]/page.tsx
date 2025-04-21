@@ -33,6 +33,27 @@ interface VehicleData {
   imageURI?: string; // Add image URI field
 }
 
+// Helper function to properly format IPFS URLs
+const formatIPFSUrl = (ipfsUri: string | undefined): string => {
+  if (!ipfsUri) return "";
+
+  // Log the original URI for debugging
+  console.log("Original image URI:", ipfsUri);
+
+  // Simply replace the IPFS gateway with the Pinata gateway
+  if (ipfsUri.includes("https://ipfs.io/ipfs/")) {
+    const formattedUrl = ipfsUri.replace(
+      "https://ipfs.io/ipfs/",
+      "https://azure-changing-rabbit-642.mypinata.cloud/ipfs/"
+    );
+    console.log("Formatted to Pinata gateway:", formattedUrl);
+    return formattedUrl;
+  }
+
+  // Return the original URI if it doesn't use ipfs.io gateway
+  return ipfsUri;
+};
+
 export default function VehiclePage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -100,9 +121,8 @@ export default function VehiclePage() {
           <p>VIN: ${vehicleData?.vin}</p>
           ${
             vehicleData?.imageURI
-              ? `<img src="${vehicleData.imageURI.replace(
-                  "ipfs://",
-                  "https://ipfs.io/ipfs/"
+              ? `<img src="${formatIPFSUrl(
+                  vehicleData.imageURI
                 )}" class="vehicle-image" alt="Vehicle image" />`
               : ""
           }
@@ -218,10 +238,7 @@ export default function VehiclePage() {
               {vehicleData.imageURI && (
                 <div className="mb-4 rounded-md overflow-hidden">
                   <Image
-                    src={vehicleData.imageURI.replace(
-                      "ipfs://",
-                      "https://ipfs.io/ipfs/"
-                    )}
+                    src={formatIPFSUrl(vehicleData.imageURI)}
                     alt={`${vehicleData.make} ${vehicleData.model}`}
                     width={300}
                     height={200}
