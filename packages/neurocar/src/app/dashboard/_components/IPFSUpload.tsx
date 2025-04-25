@@ -64,14 +64,16 @@ const IPFSUpload: React.FC<IPFSUploadProps> = ({ onUploadComplete }) => {
 
       const data = await response.json();
 
-      // Construct IPFS URI from the returned CID
-      const ipfsUri = `ipfs://${data.cid}`;
+      // Create Pinata gateway URL directly instead of ipfs:// protocol
+      const pinataUrl = `https://azure-changing-rabbit-642.mypinata.cloud/ipfs/${data.cid}`;
 
       // Set success message
-      setSuccessMessage(`File uploaded successfully! Gateway URL: ${data.url}`);
+      setSuccessMessage(
+        `File uploaded successfully! Gateway URL: ${pinataUrl}`
+      );
 
-      // Call the onUploadComplete callback with the IPFS URL
-      onUploadComplete(ipfsUri);
+      // Call the onUploadComplete callback with the Pinata gateway URL
+      onUploadComplete(pinataUrl);
     } catch (err) {
       console.error("Error uploading to Pinata:", err);
       setError("Failed to upload file. Please try again.");

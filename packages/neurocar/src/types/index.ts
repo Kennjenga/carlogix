@@ -118,6 +118,22 @@ export type IssueResolvedEvent = {
   reportIndex: bigint;
 }
 
+// Manufacturer Events
+export type ManufacturerAddedEvent = {
+  manufacturer: Address;
+  name: string;
+}
+
+export type ManufacturerStatusChangedEvent = {
+  manufacturer: Address;
+  isActive: boolean;
+}
+
+export type BulkCarsMintedEvent = {
+  manufacturer: Address;
+  count: bigint;
+}
+
 // Insurance Events
 export type PoolCreatedEvent = {
   poolId: bigint;
@@ -171,6 +187,11 @@ export type ClaimPaidEvent = {
   claimId: bigint;
   recipient: Address;
   amount: bigint;
+}
+
+export type ManufacturerDetails = {
+  name: string;
+  isActive: boolean;
 }
 
 export interface Mechanic {

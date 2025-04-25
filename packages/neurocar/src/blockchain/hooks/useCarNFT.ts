@@ -17,6 +17,10 @@ interface LogWithArgs extends Log {
     reportIndex?: bigint;
     from?: Address;
     to?: Address;
+    manufacturer?: Address;
+    name?: string;
+    isActive?: boolean;
+    count?: bigint;
   }
 }
 
@@ -33,6 +37,9 @@ export function useCarNFTData(chainId: number = 43113) {
   const [lastMaintenanceAddedEvent, setLastMaintenanceAddedEvent] = useState<MaintenanceAddedEvent | null>(null);
   const [lastIssueReportedEvent, setLastIssueReportedEvent] = useState<{tokenId: bigint, reportIndex: bigint} | null>(null);
   const [lastIssueResolvedEvent, setLastIssueResolvedEvent] = useState<{tokenId: bigint, reportIndex: bigint} | null>(null);
+  const [lastManufacturerAddedEvent, setLastManufacturerAddedEvent] = useState<{manufacturer: Address, name: string} | null>(null);
+  const [lastManufacturerStatusChangedEvent, setLastManufacturerStatusChangedEvent] = useState<{manufacturer: Address, isActive: boolean} | null>(null);
+  const [lastBulkCarsMintedEvent, setLastBulkCarsMintedEvent] = useState<{manufacturer: Address, count: bigint} | null>(null);
 
   // Event watchers
   useWatchContractEvent({
@@ -48,6 +55,61 @@ export function useCarNFTData(chainId: number = 43113) {
             tokenId: log.args.tokenId || BigInt(0),
             vin: log.args.vin || '',
             owner: log.args.owner || ZERO_ADDRESS
+          });
+        }
+      }
+    },
+  });
+
+  // Manufacturer event watchers
+  useWatchContractEvent({
+    address: carnft_address as Address,
+    abi: carnft_abi as Abi,
+    eventName: 'ManufacturerAdded',
+    chainId,
+    onLogs(logs) {
+      if (logs.length > 0) {
+        const log = logs[0] as LogWithArgs;
+        if (log && log.args) {
+          setLastManufacturerAddedEvent({
+            manufacturer: log.args.manufacturer || ZERO_ADDRESS,
+            name: log.args.name || ''
+          });
+        }
+      }
+    },
+  });
+
+  useWatchContractEvent({
+    address: carnft_address as Address,
+    abi: carnft_abi as Abi,
+    eventName: 'ManufacturerStatusChanged',
+    chainId,
+    onLogs(logs) {
+      if (logs.length > 0) {
+        const log = logs[0] as LogWithArgs;
+        if (log && log.args) {
+          setLastManufacturerStatusChangedEvent({
+            manufacturer: log.args.manufacturer || ZERO_ADDRESS,
+            isActive: log.args.isActive || false
+          });
+        }
+      }
+    },
+  });
+
+  useWatchContractEvent({
+    address: carnft_address as Address,
+    abi: carnft_abi as Abi,
+    eventName: 'BulkCarsMinted',
+    chainId,
+    onLogs(logs) {
+      if (logs.length > 0) {
+        const log = logs[0] as LogWithArgs;
+        if (log && log.args) {
+          setLastBulkCarsMintedEvent({
+            manufacturer: log.args.manufacturer || ZERO_ADDRESS,
+            count: log.args.count || BigInt(0)
           });
         }
       }
@@ -265,12 +327,86 @@ export function useCarNFTData(chainId: number = 43113) {
     });
   };
 
+  // Manufacturer role management functions
+  
+  // Add a new manufacturer with an active status
+  const addManufacturer = async (manufacturerAddress: Address, name: string) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    return await writeContractAsync({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'addManufacturer',
+      args: [manufacturerAddress, name],
+      chainId,
+    });
+  };
+
+  // Update a manufacturer's active status
+  const setManufacturerStatus = async (manufacturerAddress: Address, isActive: boolean) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    return await writeContractAsync({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'setManufacturerStatus',
+      args: [manufacturerAddress, isActive],
+      chainId,
+    });
+  };
+
+  // Check if an address is an active manufacturer
+  const isActiveManufacturer = async (manufacturerAddress: Address) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    return await writeContractAsync({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'isActiveManufacturer',
+      args: [manufacturerAddress],
+      chainId,
+    });
+  };
+
+  // Bulk mint cars (only available for manufacturers)
+  const bulkMintCars = async (
+    to: Address[], 
+    vin: string[], 
+    make: string[], 
+    model: string[], 
+    year: (bigint | number)[], 
+    registrationNumber: string[],
+    ipfsURIs: string[] // Expecting raw ipfs:// URIs
+  ) => {
+    if (!address) throw new Error('Wallet not connected');
+    
+    // Convert all ipfs URIs to gateway URLs
+    const gatewayURIs = ipfsURIs.map(uri => convertIpfsToGatewayUrl(uri));
+    
+    // Convert all years to BigInt
+    const yearsBigInt = year.map(y => BigInt(y));
+    
+    return await writeContractAsync({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'bulkMintCars',
+      args: [to, vin, make, model, yearsBigInt, registrationNumber, gatewayURIs],
+      chainId,
+    });
+  };
+
   return {
     // Write methods - specific to CarNFT
     mintCar,
     addMaintenanceRecord,
     reportIssue,
     resolveIssue,
+    
+    // Manufacturer methods
+    addManufacturer,
+    setManufacturerStatus,
+    isActiveManufacturer,
+    bulkMintCars,
     
     // Write methods - ERC721 standard
     approve,
@@ -283,6 +419,9 @@ export function useCarNFTData(chainId: number = 43113) {
     lastMaintenanceAddedEvent,
     lastIssueReportedEvent,
     lastIssueResolvedEvent,
+    lastManufacturerAddedEvent,
+    lastManufacturerStatusChangedEvent,
+    lastBulkCarsMintedEvent,
 
     // Contract info
     contractAddress: carnft_address,
