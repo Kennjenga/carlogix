@@ -3,49 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
-import {
-  Car,
-  Plus,
-  Wrench,
-  AlertTriangle,
-  Shield,
-  FileText,
-  Loader,
-  QrCode,
-  // ChevronLeft,
-  // ChevronRight,
-} from "lucide-react";
+import { Car, Plus, Wrench, AlertTriangle, Loader, QrCode } from "lucide-react";
 import { CarWithId } from "@/types";
 import MaintenanceRecordsList from "./_components/MaintenanceRecordsList";
-import IssueReportsList from "./_components/IssueReportsList";
-import InsurancePools from "./_components/InsurancePools";
-import InsuranceClaims from "./_components/InsuranceClaims";
 import { useUserCars } from "@/blockchain/hooks/useUserCars";
 import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
-// import { useCarInsuranceData } from "@/blockchain/hooks/useCarInsurance";
 import IPFSUpload from "./_components/IPFSUpload";
 import QRCode from "react-qr-code";
-
-// Helper function to properly format IPFS URLs
-const formatIPFSUrl = (ipfsUri: string | undefined): string => {
-  if (!ipfsUri) return "";
-
-  // Log the original URI for debugging
-  console.log("Original image URI:", ipfsUri);
-
-  // Simply replace the IPFS gateway with the Pinata gateway
-  if (ipfsUri.includes("https://ipfs.io/ipfs/")) {
-    const formattedUrl = ipfsUri.replace(
-      "https://ipfs.io/ipfs/",
-      "https://azure-changing-rabbit-642.mypinata.cloud/ipfs/"
-    );
-    console.log("Formatted to Pinata gateway:", formattedUrl);
-    return formattedUrl;
-  }
-
-  // Return the original URI if it doesn't use ipfs.io gateway
-  return ipfsUri;
-};
+import IssueReportsList from "./_components/IssueReportsList";
 
 export default function Dashboard() {
   const { address } = useAccount();
@@ -54,7 +19,6 @@ export default function Dashboard() {
   const [mintLoading, setMintLoading] = useState(false);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
   const [issueLoading, setIssueLoading] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
 
   // Form states
   const [mintFormData, setMintFormData] = useState({
@@ -80,10 +44,10 @@ export default function Dashboard() {
     evidenceURI: "",
   });
 
-  // Modal states
   const [showMintModal, setShowMintModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   // Hooks for data fetching
   const {
@@ -103,13 +67,8 @@ export default function Dashboard() {
   // Handle car minting
   const handleMintCar = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!address) {
-      alert("Please connect your wallet before minting a vehicle NFT");
-      return;
-    }
-
     if (
+      !address ||
       !mintFormData.make ||
       !mintFormData.model ||
       !mintFormData.year ||
@@ -218,34 +177,6 @@ export default function Dashboard() {
     }
   };
 
-  // Generate vehicle data URL for QR code
-  const generateVehicleDataURL = (car: CarWithId) => {
-    // Create a data object with key vehicle information
-    const vehicleData = {
-      id: car.id.toString(), // Convert BigInt to string
-      make: car.make,
-      model: car.model,
-      year: car.year,
-      vin: car.vin,
-      mileage: car.mileage,
-      registrationNumber: car.registrationNumber || "N/A",
-      owner: address,
-      tokenId: car.id.toString(), // Convert BigInt to string
-      issueDate: new Date().toISOString(),
-      imageURI: car.metadataURI || "", // Include the car image URI
-    };
-
-    // Custom BigInt serialization
-    const stringifiedData = JSON.stringify(vehicleData, (key, value) =>
-      typeof value === "bigint" ? value.toString() : value
-    );
-
-    // Convert to a URL-safe string that can be shared
-    return `${window.location.origin}/vehicle/${
-      car.id
-    }?data=${encodeURIComponent(stringifiedData)}`;
-  };
-
   // Loading state
   if (carsLoading) {
     return (
@@ -280,6 +211,24 @@ export default function Dashboard() {
     );
   }
 
+  // Function to generate vehicle data URL for QR code
+  const generateVehicleDataURL = (car: CarWithId) => {
+    const vehicleData = {
+      id: car.id.toString(), // Convert BigInt to string
+      make: car.make,
+      model: car.model,
+      year: car.year.toString(), // Convert BigInt to string
+      vin: car.vin,
+      mileage: car.mileage.toString(), // Convert BigInt to string
+      registrationNumber: car.registrationNumber || "N/A",
+      owner: address,
+    };
+
+    return `${window.location.origin}/vehicle/${
+      car.id
+    }?data=${encodeURIComponent(JSON.stringify(vehicleData))}`;
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-6">
@@ -291,16 +240,9 @@ export default function Dashboard() {
                 My Vehicles
               </h2>
               <button
-                onClick={() =>
-                  address
-                    ? setShowMintModal(true)
-                    : alert("Please connect your wallet first")
-                }
-                className={`p-2 ${
-                  address ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400"
-                } text-white rounded-full transition-colors`}
+                onClick={() => setShowMintModal(true)}
+                className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
                 aria-label="Add new vehicle"
-                disabled={!address}
               >
                 <Plus size={16} />
               </button>
@@ -337,19 +279,10 @@ export default function Dashboard() {
                 <Car size={40} className="mx-auto text-gray-300 mb-2" />
                 <p className="text-gray-500">No vehicles found</p>
                 <button
-                  onClick={() =>
-                    address
-                      ? setShowMintModal(true)
-                      : alert("Please connect your wallet first")
-                  }
-                  className={`mt-4 px-4 py-2 ${
-                    address ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400"
-                  } text-white rounded-md transition-colors`}
-                  disabled={!address}
+                  onClick={() => setShowMintModal(true)}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  {address
-                    ? "Add Your First Vehicle"
-                    : "Connect Wallet to Add Vehicle"}
+                  Add Your First Vehicle
                 </button>
               </div>
             )}
@@ -364,10 +297,13 @@ export default function Dashboard() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                   <div className="flex items-center gap-4">
-                    {selectedCar.metadataURI ? (
+                    {selectedCar.imageURI ? (
                       <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-100">
                         <Image
-                          src={formatIPFSUrl(selectedCar.metadataURI)}
+                          src={selectedCar.imageURI.replace(
+                            "ipfs://",
+                            "https://ipfs.io/ipfs/"
+                          )}
                           alt={`${selectedCar.make} ${selectedCar.model}`}
                           className="w-full h-full object-cover"
                           width={64}
@@ -398,13 +334,6 @@ export default function Dashboard() {
                   </div>
                   <div className="flex flex-wrap gap-2 justify-end">
                     <button
-                      onClick={() => setShowQRModal(true)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                    >
-                      <QrCode size={16} className="mr-2" />
-                      Generate QR Code
-                    </button>
-                    <button
                       onClick={() => setShowMaintenanceModal(true)}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
                     >
@@ -417,6 +346,13 @@ export default function Dashboard() {
                     >
                       <AlertTriangle size={16} className="mr-2" />
                       Report Issue
+                    </button>
+                    <button
+                      onClick={() => setShowQRModal(true)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                      <QrCode size={16} className="mr-2" />
+                      Generate QR Code
                     </button>
                   </div>
                 </div>
@@ -447,28 +383,6 @@ export default function Dashboard() {
                     <AlertTriangle size={16} className="mr-2" />
                     Issue Reports
                   </button>
-                  <button
-                    onClick={() => setActiveTab("insurance")}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
-                      activeTab === "insurance"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    <Shield size={16} className="mr-2" />
-                    Insurance
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("claims")}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
-                      activeTab === "claims"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    <FileText size={16} className="mr-2" />
-                    Claims History
-                  </button>
                 </nav>
               </div>
 
@@ -479,16 +393,6 @@ export default function Dashboard() {
                 )}
                 {activeTab === "issues" && (
                   <IssueReportsList tokenId={selectedCar.id} />
-                )}
-                {activeTab === "insurance" && (
-                  <InsurancePools
-                    cars={userCars || []}
-                    selectedCar={selectedCar}
-                    loading={false}
-                  />
-                )}
-                {activeTab === "claims" && (
-                  <InsuranceClaims tokenId={selectedCar.id} />
                 )}
               </div>
             </>
@@ -502,16 +406,8 @@ export default function Dashboard() {
                 Select a vehicle from the list or add a new one to get started.
               </p>
               <button
-                onClick={() =>
-                  address
-                    ? setShowMintModal(true)
-                    : alert("Please connect your wallet first")
-                }
-                className={`p-2 ${
-                  address ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400"
-                } text-white rounded-full transition-colors px-4`}
-                aria-label="Add new vehicle"
-                disabled={!address}
+                onClick={() => setShowMintModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 Add New Vehicle
               </button>
@@ -926,7 +822,6 @@ export default function Dashboard() {
               </h2>
             </div>
 
-            {/* QR Code display area */}
             <div className="p-6 overflow-y-auto flex-grow flex flex-col items-center">
               <div className="mb-4 text-center">
                 <h3 className="font-medium text-lg text-gray-800">
@@ -937,7 +832,6 @@ export default function Dashboard() {
 
               <div className="p-4 bg-white rounded-lg shadow-md mb-4">
                 <QRCode
-                  id="vehicle-qr-code"
                   value={generateVehicleDataURL(selectedCar)}
                   size={200}
                   level="H"
@@ -949,7 +843,6 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* Footer with buttons */}
             <div className="p-6 border-t border-gray-200 bg-gray-50 bg-opacity-70 backdrop-filter backdrop-blur-sm rounded-b-lg">
               <div className="flex justify-end space-x-3">
                 <button

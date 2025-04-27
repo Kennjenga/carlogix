@@ -11,6 +11,7 @@ import {
   Loader,
   XCircle,
   Printer,
+  RefreshCw, // Added for retry button
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -24,15 +25,20 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
     data: reports,
     isLoading,
     isError,
+    error, // Get the error object
     refetch,
-  } = useIssueReports(BigInt(tokenId), 43113);
+  } = useIssueReports(BigInt(tokenId)); // Removed hardcoded chainId
 
-  const carNFT = useCarNFTData(43113);
+  const carNFT = useCarNFTData(); // Removed hardcoded chainId
 
   // Handle resolving an issue
   const handleResolveIssue = async (reportIndex: number) => {
     try {
-      await carNFT.resolveIssue(BigInt(tokenId), reportIndex);
+      await carNFT.resolveIssue(
+        BigInt(tokenId),
+        reportIndex,
+        "Resolved via dashboard"
+      ); // Added default resolution note
       // Refetch after resolving the issue
       setTimeout(() => refetch?.(), 2000);
     } catch (error) {
@@ -74,26 +80,34 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
   // Display loading state
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
-        <Loader size={24} className="animate-spin text-blue-600" />
+      <div className="flex justify-center items-center py-8">
+        <Loader size={24} className="animate-spin text-blue-600 mr-2" />
+        <span className="text-blue-600">Loading issue reports...</span>
       </div>
     );
   }
 
-  // Display error state
+  // Display error state with detailed message
   if (isError || !reports) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return (
       <div className="rounded-md bg-red-50 p-4 mb-4">
         <div className="flex">
           <XCircle size={16} className="h-5 w-5 text-red-400" />
-          <div className="ml-3">
+          <div className="ml-3 overflow-hidden">
             <h3 className="text-sm font-medium text-red-800">
               Error loading issue reports
             </h3>
+            {errorMessage && (
+              <div className="text-xs text-red-700 mt-1 overflow-auto max-h-32">
+                <p>{errorMessage}</p>
+              </div>
+            )}
             <button
               onClick={() => refetch?.()}
-              className="mt-2 px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm"
+              className="mt-2 px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm flex items-center"
             >
+              <RefreshCw size={14} className="mr-1" />
               Try Again
             </button>
           </div>

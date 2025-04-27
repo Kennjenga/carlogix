@@ -1,36 +1,11 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { Providers } from "./providers";
+import "./globals.css";
 import Navbar from "@/components/navbar";
-// import { WagmiProvider, createConfig, http } from "wagmi";
-// import { hederaTestnet, sepolia } from "wagmi/chains";
-// import { injected } from "wagmi/connectors";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Neurocar",
-  description: "A site for digital cars",
+export const metadata = {
+  title: "NeuroCar",
+  description: "Neural Vehicle Interface",
 };
-
-// // Set up Wagmi config with Wagmi v2 syntax
-// const wagmiConfig = createConfig({
-//   chains: [hederaTestnet, sepolia],
-//   transports: {
-//     [hederaTestnet.id]: http(),
-//     [sepolia.id]: http(),
-//   },
-//   connectors: [injected()],
-// });
 
 export default function RootLayout({
   children,
@@ -47,13 +22,13 @@ export default function RootLayout({
           crossOrigin=""
         />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Providers>
-          <Navbar />
-          {children}
-        </Providers>
+      <body className={`font-sans antialiased`}>
+        <main>
+          <Providers>
+            <Navbar />
+            {children}
+          </Providers>
+        </main>
       </body>
     </html>
   );

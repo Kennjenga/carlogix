@@ -59,6 +59,44 @@ export const carnft_abi = [
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "manufacturer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "BulkCarsMinted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "vin",
+        "type": "string"
+      }
+    ],
+    "name": "CarDeleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -77,6 +115,69 @@ export const carnft_abi = [
       }
     ],
     "name": "CarMinted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "field",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "newValue",
+        "type": "string"
+      }
+    ],
+    "name": "CarUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "policyNumber",
+        "type": "string"
+      }
+    ],
+    "name": "InsuranceAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "policyNumber",
+        "type": "string"
+      }
+    ],
+    "name": "InsuranceUpdated",
     "type": "event"
   },
   {
@@ -142,6 +243,44 @@ export const carnft_abi = [
       {
         "indexed": true,
         "internalType": "address",
+        "name": "manufacturer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "name": "ManufacturerAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "manufacturer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      }
+    ],
+    "name": "ManufacturerStatusChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "previousOwner",
         "type": "address"
       },
@@ -189,6 +328,44 @@ export const carnft_abi = [
       },
       {
         "internalType": "string",
+        "name": "policyNumber",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "documentURI",
+        "type": "string"
+      }
+    ],
+    "name": "addInsuranceDetails",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
         "name": "description",
         "type": "string"
       },
@@ -209,6 +386,24 @@ export const carnft_abi = [
       }
     ],
     "name": "addMaintenanceRecord",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "manufacturerAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "name": "addManufacturer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -248,6 +443,68 @@ export const carnft_abi = [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "to",
+        "type": "address[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "vin",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "make",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "model",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "year",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "registrationNumber",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "imageURI",
+        "type": "string[]"
+      }
+    ],
+    "name": "bulkMintCars",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "deleteCar",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -308,16 +565,72 @@ export const carnft_abi = [
           },
           {
             "internalType": "string",
-            "name": "metadataURI",
+            "name": "imageURI",
             "type": "string"
           },
           {
             "internalType": "uint256",
             "name": "createdAt",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDeleted",
+            "type": "bool"
           }
         ],
         "internalType": "struct CarNFT.CarDetails",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getInsuranceDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "policyNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "provider",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "documentURI",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct CarNFT.InsuranceDetails",
         "name": "",
         "type": "tuple"
       }
@@ -420,6 +733,49 @@ export const carnft_abi = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "manufacturerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "getManufacturerDetails",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "registrationNumber",
+        "type": "string"
+      }
+    ],
+    "name": "getTokenIdByRegistrationNumber",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "vin",
         "type": "string"
@@ -431,6 +787,25 @@ export const carnft_abi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "manufacturerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "isActiveManufacturer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -494,7 +869,7 @@ export const carnft_abi = [
       },
       {
         "internalType": "string",
-        "name": "metadataURI",
+        "name": "imageURI",
         "type": "string"
       }
     ],
@@ -661,6 +1036,74 @@ export const carnft_abi = [
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "registrationNumber",
+        "type": "string"
+      }
+    ],
+    "name": "searchByRegistrationNumber",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "make",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "model",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "year",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "imageURI",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "vin",
+        "type": "string"
+      }
+    ],
+    "name": "searchByVIN",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "make",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "model",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "year",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "imageURI",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "operator",
         "type": "address"
@@ -672,6 +1115,24 @@ export const carnft_abi = [
       }
     ],
     "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "manufacturerAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      }
+    ],
+    "name": "setManufacturerStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -818,11 +1279,94 @@ export const carnft_abi = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "field",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "newValue",
+        "type": "string"
+      }
+    ],
+    "name": "updateCarDetails",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newYear",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCarYear",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "policyNumber",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "documentURI",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      }
+    ],
+    "name": "updateInsuranceDetails",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]
 
-
-export const carnft_address = "0x73aE984a234e1cacC61EC6aC29f895F40effDE1D"
+export const carnft_address = "0xa857caf075Cb9060e4C9B589ff2Df43731e0EB32"
 
 export const carinsurance_abi = [
   {
@@ -830,6 +1374,26 @@ export const carinsurance_abi = [
       {
         "internalType": "address",
         "name": "_carNFTAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_minMonthlyPremiumUsdt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxCoverageMultiplier",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_defaultStablecoin",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_rateOracleAddress",
         "type": "address"
       }
     ],
@@ -841,24 +1405,43 @@ export const carinsurance_abi = [
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "poolId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
         "internalType": "address",
-        "name": "member",
+        "name": "actuary",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "credentials",
+        "type": "string"
       }
     ],
-    "name": "AdditionalContribution",
+    "name": "ActuaryRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "actuary",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "ActuaryRevoked",
     "type": "event"
   },
   {
@@ -877,7 +1460,7 @@ export const carinsurance_abi = [
         "type": "address"
       }
     ],
-    "name": "AssessorAssigned",
+    "name": "AssessorAssignedToClaim",
     "type": "event"
   },
   {
@@ -910,12 +1493,56 @@ export const carinsurance_abi = [
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "assessor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "AssessorRemovedFromClaim",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "assessor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "AssessorRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "assessor",
         "type": "address"
       }
     ],
-    "name": "AssessorRoleRevoked",
+    "name": "AssessorSelfDeactivated",
     "type": "event"
   },
   {
@@ -930,11 +1557,11 @@ export const carinsurance_abi = [
       {
         "indexed": false,
         "internalType": "bool",
-        "name": "active",
+        "name": "isActive",
         "type": "bool"
       }
     ],
-    "name": "AssessorStatusChanged",
+    "name": "AssessorStatusUpdated",
     "type": "event"
   },
   {
@@ -961,7 +1588,7 @@ export const carinsurance_abi = [
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "recommendedPayout",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -980,20 +1607,14 @@ export const carinsurance_abi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "poolId",
+        "name": "membershipId",
         "type": "uint256"
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "claimant",
-        "type": "address"
-      },
-      {
         "indexed": false,
-        "internalType": "string",
-        "name": "description",
-        "type": "string"
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "name": "ClaimFiled",
@@ -1034,13 +1655,76 @@ export const carinsurance_abi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
-        "internalType": "enum CarInsurancePool.ClaimStatus",
-        "name": "status",
-        "type": "uint8"
+        "indexed": true,
+        "internalType": "address",
+        "name": "oldAssessor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newAssessor",
+        "type": "address"
       }
     ],
-    "name": "ClaimStatusChanged",
+    "name": "ClaimReassigned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "finalAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimReviewed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "stablecoin",
+        "type": "address"
+      }
+    ],
+    "name": "DefaultStablecoinSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "rateName",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newRate",
+        "type": "uint256"
+      }
+    ],
+    "name": "ExchangeRateUpdated",
     "type": "event"
   },
   {
@@ -1054,8 +1738,27 @@ export const carinsurance_abi = [
       },
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      }
+    ],
+    "name": "MemberJoinedPool",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
-        "name": "member",
+        "name": "owner",
         "type": "address"
       },
       {
@@ -1063,15 +1766,28 @@ export const carinsurance_abi = [
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
+      }
+    ],
+    "name": "MembershipCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "contribution",
-        "type": "uint256"
+        "internalType": "enum CarInsurancePool.MembershipStatus",
+        "name": "status",
+        "type": "uint8"
       }
     ],
-    "name": "MemberJoined",
+    "name": "MembershipStatusUpdated",
     "type": "event"
   },
   {
@@ -1091,12 +1807,62 @@ export const carinsurance_abi = [
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
+        "internalType": "string",
+        "name": "specialization",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minMonthlyPremiumUsdt",
+        "type": "uint256"
       }
     ],
     "name": "PoolCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "poolId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum CarInsurancePool.PoolStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "PoolStatusUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "consecutivePayments",
+        "type": "uint256"
+      }
+    ],
+    "name": "PremiumPaid",
     "type": "event"
   },
   {
@@ -1175,6 +1941,80 @@ export const carinsurance_abi = [
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "stablecoin",
+        "type": "address"
+      }
+    ],
+    "name": "StablecoinAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "stablecoin",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "consecutivePayments",
+        "type": "uint256"
+      }
+    ],
+    "name": "StablecoinPremiumPaid",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "stablecoin",
+        "type": "address"
+      }
+    ],
+    "name": "StablecoinRemoved",
+    "type": "event"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "inputs": [],
+    "name": "ACTUARY_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "ADMIN_ROLE",
     "outputs": [
@@ -1216,17 +2056,131 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "stablecoinAddress",
+        "type": "address"
+      }
+    ],
+    "name": "addSupportedStablecoin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "approvedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "notes",
+        "type": "string"
+      }
+    ],
+    "name": "assessClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "assessorActiveClaims",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "assessors",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "credentials",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "specialization",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "registrationDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalAssessments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "reputationScore",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "claimId",
         "type": "uint256"
       },
       {
         "internalType": "address",
-        "name": "assessor",
+        "name": "assessorAddress",
         "type": "address"
       }
     ],
-    "name": "assignAssessor",
+    "name": "assignAssessorToClaim",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1248,13 +2202,209 @@ export const carinsurance_abi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "poolId",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "name": "contributeToPool",
-    "outputs": [],
-    "stateMutability": "payable",
+    "name": "claimAssessorHistory",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "claims",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "claimant",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "evidenceUri",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "filingDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum CarInsurancePool.ClaimStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "assignedAssessor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "assignmentDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAssessorWorking",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "assessorApprovedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "assessorNotes",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "assessmentDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "adminApprovedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "adminNotes",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "adminReviewDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "finalPaidAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paymentDate",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimsByMembership",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "avaxAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "convertAvaxToUsdt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "kesAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "convertKesToUsdt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "usdtAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "convertUsdtToAvax",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1271,16 +2421,46 @@ export const carinsurance_abi = [
       },
       {
         "internalType": "uint256",
-        "name": "minContribution",
+        "name": "minMonthlyPremiumUsdt",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "maxCoverage",
+        "name": "maxCoverageMultiplier",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "assessmentTimeLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "adminReviewTimeLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minConsecutivePayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "specializationRequired",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "specialization",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxYearsCovered",
         "type": "uint256"
       }
     ],
-    "name": "createPool",
+    "name": "createInsurancePool",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1292,93 +2472,13 @@ export const carinsurance_abi = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "poolId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "description",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "evidenceURI",
-        "type": "string"
-      }
-    ],
-    "name": "fileClaim",
+    "inputs": [],
+    "name": "defaultStablecoin",
     "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimId",
-        "type": "uint256"
-      }
-    ],
-    "name": "finalizeAssessorApprovedClaim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
       {
         "internalType": "address",
-        "name": "assessor",
-        "type": "address"
-      }
-    ],
-    "name": "getAssessorDetails",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "credentials",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "registeredAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "active",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "completedAssessments",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct CarInsurancePool.Assessor",
         "name": "",
-        "type": "tuple"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1387,12 +2487,12 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "assessorAddress",
+        "type": "address"
       }
     ],
-    "name": "getCarClaims",
+    "name": "getAssessorActiveClaims",
     "outputs": [
       {
         "internalType": "uint256[]",
@@ -1411,74 +2511,12 @@ export const carinsurance_abi = [
         "type": "uint256"
       }
     ],
-    "name": "getClaimDetails",
+    "name": "getClaimAssessorHistory",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "poolId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "claimant",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "evidenceURI",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "createdAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum CarInsurancePool.ClaimStatus",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "address",
-            "name": "assignedAssessor",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "recommendedPayout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payoutAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "rejectionReason",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct CarInsurancePool.InsuranceClaim",
+        "internalType": "address[]",
         "name": "",
-        "type": "tuple"
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -1488,103 +2526,11 @@ export const carinsurance_abi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "claimId",
+        "name": "membershipId",
         "type": "uint256"
       }
     ],
-    "name": "getClaimEvaluations",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "assessor",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "recommendedPayout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "evaluationNotes",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "approved",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct CarInsurancePool.AssessorEvaluation[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "poolId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "member",
-        "type": "address"
-      }
-    ],
-    "name": "getMemberContributionHistory",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "poolId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "contributionType",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct CarInsurancePool.ContributionRecord[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "member",
-        "type": "address"
-      }
-    ],
-    "name": "getMemberPools",
+    "name": "getClaimsByMembership",
     "outputs": [
       {
         "internalType": "uint256[]",
@@ -1598,49 +2544,17 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "poolId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
-        "name": "member",
+        "name": "owner",
         "type": "address"
       }
     ],
-    "name": "getMembershipDetails",
+    "name": "getMembershipsByOwner",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "contribution",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "coverageLimit",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "joinedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "active",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct CarInsurancePool.PoolMembership",
+        "internalType": "uint256[]",
         "name": "",
-        "type": "tuple"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -1657,51 +2571,78 @@ export const carinsurance_abi = [
     "name": "getPoolDetails",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minContribution",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxCoverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalBalance",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "memberCount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "createdAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "active",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct CarInsurancePool.InsurancePool",
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "creationDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum CarInsurancePool.PoolStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minMonthlyPremium",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxCoverageMultiplier",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "riskFactor",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "memberCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "specialization",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxYearsCovered",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "poolId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPoolMemberships",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
         "name": "",
-        "type": "tuple"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -1764,6 +2705,19 @@ export const carinsurance_abi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSupportedStablecoins",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -1835,9 +2789,237 @@ export const carinsurance_abi = [
         "internalType": "uint256",
         "name": "poolId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
-    "name": "leavePool",
+    "name": "joinPoolWithUSDT",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "membershipToPool",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "memberships",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "coverageAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "monthlyPremium",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastPaymentDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalContributions",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "consecutivePayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum CarInsurancePool.MembershipStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "membershipsByOwner",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "params",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "minMonthlyPremiumUsdt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxCoverageMultiplier",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "assessmentTimeLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "adminReviewTimeLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minConsecutivePayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "poolBalance",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "payPoolPremiumWithUSDT",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "poolMemberships",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "rateOracle",
+    "outputs": [
+      {
+        "internalType": "contract RateOracle",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "newAssessorAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "reassignClaim",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1846,7 +3028,7 @@ export const carinsurance_abi = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "assessor",
+        "name": "actuaryAddress",
         "type": "address"
       },
       {
@@ -1860,6 +3042,34 @@ export const carinsurance_abi = [
         "type": "string"
       }
     ],
+    "name": "registerActuary",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assessorAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "credentials",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "specialization",
+        "type": "string"
+      }
+    ],
     "name": "registerAssessor",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1868,12 +3078,12 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "claimId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "stablecoinAddress",
+        "type": "address"
       }
     ],
-    "name": "rejectClaim",
+    "name": "removeSupportedStablecoin",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1899,12 +3109,63 @@ export const carinsurance_abi = [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "assessor",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "finalAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "notes",
+        "type": "string"
       }
     ],
-    "name": "revokeAssessorRole",
+    "name": "reviewClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "actuaryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "revokeActuary",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assessorAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "revokeAssessor",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1931,16 +3192,11 @@ export const carinsurance_abi = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "assessor",
+        "name": "_stablecoinAddress",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "active",
-        "type": "bool"
       }
     ],
-    "name": "setAssessorStatus",
+    "name": "setDefaultStablecoin",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1949,28 +3205,38 @@ export const carinsurance_abi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "claimId",
+        "name": "",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "approved",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "recommendedPayout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "evaluationNotes",
-        "type": "string"
       }
     ],
-    "name": "submitAssessment",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "stablecoinList",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "supportedStablecoins",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1991,8 +3257,289 @@ export const carinsurance_abi = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_avaxToUsdtRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_usdtToKesRate",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateExchangeRates",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
 
-export const carinsurance_address = "0x5f260ceb6bD6937CD3CFf10FbdA4357C9B4C3D53"
+export const carinsurance_address = "0xbb760e2ad9c6DAD676be1414b53a874b92dD82bf"
 
+export const usdt_address = "0xb9c31ea1d475c25e58a1be1a46221db55e5a7c6e"
+
+export const rateoracle_address = "0x72aFEAdE1591F3fe2Cd5c373Bc55a613ccd21063"
+
+export const rateoracle_abi = [
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "currencyPair",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "rate",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "RateUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "AVAX_USDT",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "USDT_KES",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "currencyPair",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "currencyPair",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRateWithTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "currencyPair",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rate",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
+
+export const usdt_abi = [
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      }
+    ],
+    "name": "allowance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "transfer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

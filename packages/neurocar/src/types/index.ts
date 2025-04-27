@@ -9,7 +9,7 @@ export type CarDetails = {
   model: string;
   year: bigint;
   registrationNumber: string;
-  metadataURI: string;
+  imageURI: string;
   createdAt: bigint;
 }
 
@@ -29,7 +29,21 @@ export type IssueReport = {
   evidenceURI: string;
 }
 
-export type CarWithId = CarDetails & { tokenId: bigint; id: string; mileage: bigint; };
+export type InsuranceDetail = {
+  policyNumber: string;
+  provider: string;
+  startDate: bigint;
+  endDate: bigint;
+  documentURI: string;
+  active: boolean;
+}
+
+export type CarWithId = CarDetails & { 
+  tokenId: bigint; 
+  id: string; 
+  mileage: bigint; 
+  insuranceDetails?: InsuranceDetail | null;
+};
 
 // ======= Car Insurance Types =======
 
@@ -48,11 +62,12 @@ export type InsurancePool = {
   name: string;
   description: string;
   minContribution: bigint;
-  maxCoverage: bigint;
+  coverageMultiplier: bigint;
   totalBalance: bigint;
   memberCount: bigint;
   createdAt: bigint;
   active: boolean;
+  creator?: Address;
 }
 
 export type PoolMembership = {
@@ -84,6 +99,13 @@ export type Assessor = {
   registeredAt: bigint;
   active: boolean;
   completedAssessments: bigint;
+}
+
+export type Actuary = {
+  name: string;
+  credentials: string;
+  registeredAt: bigint;
+  active: boolean;
 }
 
 export type AssessorEvaluation = {
@@ -161,8 +183,19 @@ export type AssessorRegisteredEvent = {
   credentials: string;
 }
 
+export type ActuaryRegisteredEvent = {
+  actuary: Address;
+  name: string;
+  credentials: string;
+}
+
 export type AssessorStatusChangedEvent = {
   assessor: Address;
+  active: boolean;
+}
+
+export type ActuaryStatusChangedEvent = {
+  actuary: Address;
   active: boolean;
 }
 
@@ -187,6 +220,12 @@ export type ClaimPaidEvent = {
   claimId: bigint;
   recipient: Address;
   amount: bigint;
+}
+
+export type RateUpdatedEvent = {
+  currencyPair: string;
+  rate: bigint;
+  timestamp: bigint;
 }
 
 export type ManufacturerDetails = {

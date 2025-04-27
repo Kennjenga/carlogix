@@ -1,17 +1,16 @@
 "use client"
 
-// src/blockchain/hooks/useContractReads.ts
 import { useReadContract } from 'wagmi'
 import { Abi, Address } from 'viem'
 import { createPublicClient, http } from 'viem';
 import { avalancheFuji } from 'viem/chains';
-import { carnft_abi, carnft_address, carinsurance_abi, carinsurance_address } from '@/blockchain/abi/neuro'
+import { carnft_abi, carnft_address, carinsurance_abi, carinsurance_address, rateoracle_abi, rateoracle_address } from '@/blockchain/abi/neuro'
 
-// Define the correct RPC URL for Hedera testnet
+// Define the correct RPC URL for Avalanche Fuji testnet
 const AVAX_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
 
 // Client for direct blockchain interactions
-const publicClient = createPublicClient({
+export const publicClient = createPublicClient({
   chain: {
     ...avalancheFuji,
     id: 43113,
@@ -56,8 +55,7 @@ export function useMaintenanceRecords(tokenId: bigint | number | undefined, chai
       enabled: tokenId !== undefined,
       retry: 3,
       staleTime: 60000, // 1 minute
-    },
-    // Custom RPC URL to prevent 404 errors
+    }
   })
 }
 
@@ -157,6 +155,19 @@ export function useTokenIdByVIN(vin: string | undefined, chainId: number = 43113
   })
 }
 
+export function useTokenIdByRegistrationNumber(registrationNumber: string | undefined, chainId: number = 43113) {
+  return useReadContract({
+    address: carnft_address as Address,
+    abi: carnft_abi,
+    functionName: 'getTokenIdByRegistrationNumber',
+    args: registrationNumber ? [registrationNumber] : undefined,
+    chainId,
+    query: {
+      enabled: !!registrationNumber,
+    }
+  })
+}
+
 // -- Car Insurance Read Hooks --
 
 // Role related hooks
@@ -174,6 +185,15 @@ export function useAssessorRole(chainId: number = 43113) {
     address: carinsurance_address as Address,
     abi: carinsurance_abi,
     functionName: 'ASSESSOR_ROLE',
+    chainId,
+  })
+}
+
+export function useActuaryRole(chainId: number = 43113) {
+  return useReadContract({
+    address: carinsurance_address as Address,
+    abi: carinsurance_abi,
+    functionName: 'ACTUARY_ROLE',
     chainId,
   })
 }
@@ -321,6 +341,20 @@ export function useAssessorDetails(assessorAddress: Address | undefined, chainId
   })
 }
 
+// Actuary management hook
+export function useActuaryDetails(actuaryAddress: Address | undefined, chainId: number = 43113) {
+  return useReadContract({
+    address: carinsurance_address as Address,
+    abi: carinsurance_abi,
+    functionName: 'getActuaryDetails',
+    args: actuaryAddress ? [actuaryAddress] : undefined,
+    chainId,
+    query: {
+      enabled: !!actuaryAddress,
+    }
+  })
+}
+
 // Get pool count
 export function usePoolCount(chainId: number = 43113) {
   return useReadContract({
@@ -331,12 +365,58 @@ export function usePoolCount(chainId: number = 43113) {
   })
 }
 
+// RateOracle hooks
+export function useExchangeRate(currencyPair: string | undefined, chainId: number = 43113) {
+  return useReadContract({
+    address: rateoracle_address as Address,
+    abi: rateoracle_abi,
+    functionName: 'getRate',
+    args: currencyPair ? [currencyPair] : undefined,
+    chainId,
+    query: {
+      enabled: !!currencyPair,
+    }
+  })
+}
+
+export function useExchangeRateWithTimestamp(currencyPair: string | undefined, chainId: number = 43113) {
+  return useReadContract({
+    address: rateoracle_address as Address,
+    abi: rateoracle_abi,
+    functionName: 'getRateWithTimestamp',
+    args: currencyPair ? [currencyPair] : undefined,
+    chainId,
+    query: {
+      enabled: !!currencyPair,
+    }
+  })
+}
+
+// Stablecoin related hooks
+export function useSupportedStablecoins(chainId: number = 43113) {
+  return useReadContract({
+    address: carinsurance_address as Address,
+    abi: carinsurance_abi,
+    functionName: 'getSupportedStablecoins',
+    chainId,
+  })
+}
+
+export function useDefaultStablecoin(chainId: number = 43113) {
+  return useReadContract({
+    address: carinsurance_address as Address,
+    abi: carinsurance_abi,
+    functionName: 'defaultStablecoin',
+    chainId,
+  })
+}
+
 // Fetch all active pools
 export async function fetchAllPools() {
   try {
     console.log("Fetching all active pools...");
     
-    // Since Hedera limits log queries to 7 days, we'll use a sequential approach
+    // Since some networks limit log queries, we'll use a sequential approach
     const pools = [];
     let poolId = 1;
     const MAX_POOLS_TO_CHECK = 10; // Safety limit
@@ -363,11 +443,12 @@ export async function fetchAllPools() {
             name?: string;
             description?: string;
             minContribution?: bigint;
-            maxCoverage?: bigint;
+            coverageMultiplier?: bigint;
             totalBalance?: bigint;
             memberCount?: number;
             createdAt?: bigint;
             active?: boolean;
+            creator?: Address;
           };
           
           // Only add the pool if it's active
@@ -377,11 +458,12 @@ export async function fetchAllPools() {
               name: poolData.name || `Pool ${poolId}`,
               description: poolData.description || "Insurance pool for vehicles",
               minContribution: poolData.minContribution || BigInt(0),
-              maxCoverage: poolData.maxCoverage || BigInt(0),
+              coverageMultiplier: poolData.coverageMultiplier || BigInt(0),
               totalFunds: poolData.totalBalance || BigInt(0),
               memberCount: poolData.memberCount || 0,
               createdAt: poolData.createdAt || BigInt(0),
-              active: true
+              active: true,
+              creator: poolData.creator || '0x0000000000000000000000000000000000000000'
             });
           } else {
             console.log(`Pool ${poolId} exists but is inactive, skipping`);
@@ -414,6 +496,52 @@ export async function fetchAllPools() {
     return pools;
   } catch (error) {
     console.error("Error fetching all pools:", error);
+    throw error;
+  }
+}
+
+// Fetch all registered assessors
+export async function fetchAllAssessors() {
+  try {
+    console.log("Fetching all registered assessors...");
+    
+    const assessorRole = await publicClient.readContract({
+      address: carinsurance_address as Address,
+      abi: carinsurance_abi,
+      functionName: 'ASSESSOR_ROLE'
+    });
+    
+    // Not possible to get all role members with a single call in most contracts
+    // Need to implement contract-specific logic or check events
+    // This is a placeholder - actual implementation would depend on contract specifics
+    
+    console.log("Assessor role identifier:", assessorRole);
+    return [];
+  } catch (error) {
+    console.error("Error fetching assessors:", error);
+    throw error;
+  }
+}
+
+// Fetch all registered actuaries
+export async function fetchAllActuaries() {
+  try {
+    console.log("Fetching all registered actuaries...");
+    
+    const actuaryRole = await publicClient.readContract({
+      address: carinsurance_address as Address,
+      abi: carinsurance_abi,
+      functionName: 'ACTUARY_ROLE'
+    });
+    
+    // Not possible to get all role members with a single call in most contracts
+    // Need to implement contract-specific logic or check events
+    // This is a placeholder - actual implementation would depend on contract specifics
+    
+    console.log("Actuary role identifier:", actuaryRole);
+    return [];
+  } catch (error) {
+    console.error("Error fetching actuaries:", error);
     throw error;
   }
 }

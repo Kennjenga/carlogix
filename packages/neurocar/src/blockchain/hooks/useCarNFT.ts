@@ -1,6 +1,5 @@
 "use client"
 
-// src/blockchain/hooks/useCarNFTData.ts
 import { useWriteContract, useAccount, useWatchContractEvent } from 'wagmi';
 import { Abi, Address, Log } from 'viem';
 import { useState } from 'react';
@@ -21,6 +20,21 @@ interface LogWithArgs extends Log {
     name?: string;
     isActive?: boolean;
     count?: bigint;
+    policyNumber?: string;
+    provider?: string;
+    startDate?: bigint;
+    endDate?: bigint;
+    documentURI?: string;
+    active?: boolean;
+    make?: string;
+    model?: string;
+    year?: bigint;
+    registrationNumber?: string;
+    imageURI?: string;
+    mileage?: bigint;
+    serviceProvider?: string;
+    issueType?: string;
+    resolved?: boolean;
   }
 }
 
@@ -30,7 +44,7 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
 export function useCarNFTData(chainId: number = 43113) {
   // First, define hooks and state
   const { address } = useAccount();
-  const { writeContractAsync } = useWriteContract();
+  const { writeContract } = useWriteContract();
 
   // State variables
   const [lastCarMintedEvent, setLastCarMintedEvent] = useState<CarMintedEvent | null>(null);
@@ -40,6 +54,9 @@ export function useCarNFTData(chainId: number = 43113) {
   const [lastManufacturerAddedEvent, setLastManufacturerAddedEvent] = useState<{manufacturer: Address, name: string} | null>(null);
   const [lastManufacturerStatusChangedEvent, setLastManufacturerStatusChangedEvent] = useState<{manufacturer: Address, isActive: boolean} | null>(null);
   const [lastBulkCarsMintedEvent, setLastBulkCarsMintedEvent] = useState<{manufacturer: Address, count: bigint} | null>(null);
+  const [lastInsuranceAddedEvent, setLastInsuranceAddedEvent] = useState<{tokenId: bigint, policyNumber: string} | null>(null);
+  const [lastInsuranceUpdatedEvent, setLastInsuranceUpdatedEvent] = useState<{tokenId: bigint, policyNumber: string} | null>(null);
+  const [lastTransferEvent, setLastTransferEvent] = useState<{from: Address, to: Address, tokenId: bigint} | null>(null);
 
   // Event watchers
   useWatchContractEvent({
@@ -55,6 +72,25 @@ export function useCarNFTData(chainId: number = 43113) {
             tokenId: log.args.tokenId || BigInt(0),
             vin: log.args.vin || '',
             owner: log.args.owner || ZERO_ADDRESS
+          });
+        }
+      }
+    },
+  });
+
+  useWatchContractEvent({
+    address: carnft_address as Address,
+    abi: carnft_abi as Abi,
+    eventName: 'Transfer',
+    chainId,
+    onLogs(logs) {
+      if (logs.length > 0) {
+        const log = logs[0] as LogWithArgs;
+        if (log && log.args) {
+          setLastTransferEvent({
+            from: log.args.from || ZERO_ADDRESS,
+            to: log.args.to || ZERO_ADDRESS,
+            tokenId: log.args.tokenId || BigInt(0)
           });
         }
       }
@@ -170,40 +206,42 @@ export function useCarNFTData(chainId: number = 43113) {
     },
   });
 
-  // Write functions for CarNFT contract based on ABI
+  useWatchContractEvent({
+    address: carnft_address as Address,
+    abi: carnft_abi as Abi,
+    eventName: 'InsuranceAdded',
+    chainId,
+    onLogs(logs) {
+      if (logs.length > 0) {
+        const log = logs[0] as LogWithArgs;
+        if (log && log.args) {
+          setLastInsuranceAddedEvent({
+            tokenId: log.args.tokenId || BigInt(0),
+            policyNumber: log.args.policyNumber || ''
+          });
+        }
+      }
+    },
+  });
 
-  // Mint a new car NFT
-  const mintCar = async (
-    to: Address,
-    vin: string,
-    make: string,
-    model: string,
-    year: bigint | number,
-    registrationNumber: string,
-    ipfsURI: string // Expecting raw ipfs:// URI
-  ) => {
-    if (!address) throw new Error('Wallet not connected');
-  
-    // Convert to HTTPS gateway URL for wallet compatibility
-    const gatewayURI = convertIpfsToGatewayUrl(ipfsURI);
-  
-    return await writeContractAsync({
-      address: carnft_address as Address,
-      abi: carnft_abi as Abi,
-      functionName: 'mintCar',
-      args: [
-        to, 
-        vin, 
-        make, 
-        model, 
-        BigInt(year), 
-        registrationNumber, 
-        gatewayURI // Using gateway URL for minting
-      ],
-      chainId,
-    });
-  };
-  
+  useWatchContractEvent({
+    address: carnft_address as Address,
+    abi: carnft_abi as Abi,
+    eventName: 'InsuranceUpdated',
+    chainId,
+    onLogs(logs) {
+      if (logs.length > 0) {
+        const log = logs[0] as LogWithArgs;
+        if (log && log.args) {
+          setLastInsuranceUpdatedEvent({
+            tokenId: log.args.tokenId || BigInt(0),
+            policyNumber: log.args.policyNumber || ''
+          });
+        }
+      }
+    },
+  });
+
   // Helper function to handle IPFS URI conversion
   const convertIpfsToGatewayUrl = (ipfsUri: string): string => {
     // List of reliable public gateways (fallback system)
@@ -225,6 +263,38 @@ export function useCarNFTData(chainId: number = 43113) {
     return `${gateways[0]}${cidPath}`;
   };
 
+  // Mint a new car NFT
+  const mintCar = async (
+    to: Address,
+    vin: string,
+    make: string,
+    model: string,
+    year: bigint | number,
+    registrationNumber: string,
+    ipfsURI: string
+  ) => {
+    if (!address) throw new Error('Wallet not connected');
+  
+    // Convert to HTTPS gateway URL for wallet compatibility
+    const gatewayURI = convertIpfsToGatewayUrl(ipfsURI);
+  
+    return await writeContract({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'mintCar',
+      args: [
+        to, 
+        vin, 
+        make, 
+        model, 
+        BigInt(year), 
+        registrationNumber, 
+        gatewayURI
+      ],
+      chainId,
+    });
+  };
+
   // Add a maintenance record to a car
   const addMaintenanceRecord = async (
     tokenId: bigint | number,
@@ -235,7 +305,7 @@ export function useCarNFTData(chainId: number = 43113) {
   ) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'addMaintenanceRecord',
@@ -253,7 +323,7 @@ export function useCarNFTData(chainId: number = 43113) {
   ) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'reportIssue',
@@ -265,15 +335,34 @@ export function useCarNFTData(chainId: number = 43113) {
   // Resolve a previously reported issue
   const resolveIssue = async (
     tokenId: bigint | number,
-    reportIndex: bigint | number
+    reportIndex: bigint | number,
+    resolutionNotes: string
   ) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'resolveIssue',
-      args: [BigInt(tokenId), BigInt(reportIndex)],
+      args: [BigInt(tokenId), BigInt(reportIndex), resolutionNotes],
+      chainId,
+    });
+  };
+
+  // Update car information
+  const updateCarInfo = async (
+    tokenId: bigint | number,
+    newImageURI: string
+  ) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    const gatewayURI = convertIpfsToGatewayUrl(newImageURI);
+
+    return await writeContract({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'updateCarURI',
+      args: [BigInt(tokenId), gatewayURI],
       chainId,
     });
   };
@@ -282,7 +371,7 @@ export function useCarNFTData(chainId: number = 43113) {
   const approve = async (to: Address, tokenId: bigint | number) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'approve',
@@ -294,7 +383,7 @@ export function useCarNFTData(chainId: number = 43113) {
   const setApprovalForAll = async (operator: Address, approved: boolean) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'setApprovalForAll',
@@ -306,7 +395,7 @@ export function useCarNFTData(chainId: number = 43113) {
   const transferFrom = async (from: Address, to: Address, tokenId: bigint | number) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'transferFrom',
@@ -318,7 +407,7 @@ export function useCarNFTData(chainId: number = 43113) {
   const safeTransferFrom = async (from: Address, to: Address, tokenId: bigint | number, data: string = '') => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'safeTransferFrom',
@@ -333,7 +422,7 @@ export function useCarNFTData(chainId: number = 43113) {
   const addManufacturer = async (manufacturerAddress: Address, name: string) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'addManufacturer',
@@ -346,7 +435,7 @@ export function useCarNFTData(chainId: number = 43113) {
   const setManufacturerStatus = async (manufacturerAddress: Address, isActive: boolean) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'setManufacturerStatus',
@@ -359,7 +448,7 @@ export function useCarNFTData(chainId: number = 43113) {
   const isActiveManufacturer = async (manufacturerAddress: Address) => {
     if (!address) throw new Error('Wallet not connected');
 
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'isActiveManufacturer',
@@ -376,7 +465,7 @@ export function useCarNFTData(chainId: number = 43113) {
     model: string[], 
     year: (bigint | number)[], 
     registrationNumber: string[],
-    ipfsURIs: string[] // Expecting raw ipfs:// URIs
+    ipfsURIs: string[]
   ) => {
     if (!address) throw new Error('Wallet not connected');
     
@@ -386,7 +475,7 @@ export function useCarNFTData(chainId: number = 43113) {
     // Convert all years to BigInt
     const yearsBigInt = year.map(y => BigInt(y));
     
-    return await writeContractAsync({
+    return await writeContract({
       address: carnft_address as Address,
       abi: carnft_abi as Abi,
       functionName: 'bulkMintCars',
@@ -395,9 +484,75 @@ export function useCarNFTData(chainId: number = 43113) {
     });
   };
 
+  // Insurance management functions
+  const addInsuranceDetails = async (
+    tokenId: bigint | number,
+    policyNumber: string,
+    provider: string,
+    startDate: bigint | number,
+    endDate: bigint | number,
+    documentURI: string
+  ) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    return await writeContract({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'addInsuranceDetails',
+      args: [BigInt(tokenId), policyNumber, provider, BigInt(startDate), BigInt(endDate), documentURI],
+      chainId,
+    });
+  };
+
+  const updateInsuranceDetails = async (
+    tokenId: bigint | number,
+    policyNumber: string,
+    provider: string,
+    startDate: bigint | number,
+    endDate: bigint | number,
+    documentURI: string,
+    active: boolean
+  ) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    return await writeContract({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'updateInsuranceDetails',
+      args: [BigInt(tokenId), policyNumber, provider, BigInt(startDate), BigInt(endDate), documentURI, active],
+      chainId,
+    });
+  };
+
+  // Vehicle search functions
+  const getCarByVIN = async (vin: string) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    return await writeContract({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'getTokenIdByVIN',
+      args: [vin],
+      chainId,
+    });
+  };
+
+  const getCarByRegistration = async (registrationNumber: string) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    return await writeContract({
+      address: carnft_address as Address,
+      abi: carnft_abi as Abi,
+      functionName: 'getTokenIdByRegistrationNumber',
+      args: [registrationNumber],
+      chainId,
+    });
+  };
+
   return {
-    // Write methods - specific to CarNFT
+    // Car minting and management
     mintCar,
+    updateCarInfo,
     addMaintenanceRecord,
     reportIssue,
     resolveIssue,
@@ -407,8 +562,16 @@ export function useCarNFTData(chainId: number = 43113) {
     setManufacturerStatus,
     isActiveManufacturer,
     bulkMintCars,
-    
-    // Write methods - ERC721 standard
+
+    // Insurance methods
+    addInsuranceDetails,
+    updateInsuranceDetails,
+
+    // Vehicle search methods
+    getCarByVIN,
+    getCarByRegistration,
+
+    // ERC721 standard methods
     approve,
     setApprovalForAll,
     transferFrom,
@@ -422,6 +585,12 @@ export function useCarNFTData(chainId: number = 43113) {
     lastManufacturerAddedEvent,
     lastManufacturerStatusChangedEvent,
     lastBulkCarsMintedEvent,
+    lastInsuranceAddedEvent,
+    lastInsuranceUpdatedEvent,
+    lastTransferEvent,
+
+    // Helper function
+    convertIpfsToGatewayUrl,
 
     // Contract info
     contractAddress: carnft_address,

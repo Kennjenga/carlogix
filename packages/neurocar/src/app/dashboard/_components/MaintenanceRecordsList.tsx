@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Wrench,
   FileText,
@@ -9,16 +9,14 @@ import {
   RefreshCw,
   Printer,
 } from "lucide-react";
-import { createPublicClient, http } from "viem";
+import { usePublicClient } from "wagmi";
 import { carnft_abi, carnft_address } from "@/blockchain/abi/neuro";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
-// Direct RPC URL for fuji testnet
-const AVAX_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
+import { Address } from "viem";
 
 // Contract details
-const CARNFT_ADDRESS = carnft_address;
+const CARNFT_ADDRESS = carnft_address as Address;
 
 // Minimal ABI with just the function we need
 const CARNFT_ABI = carnft_abi;
@@ -55,15 +53,13 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [lastFetched, setLastFetched] = useState<number>(0);
 
-  // Create a dedicated client with the correct RPC URL
-  const client = createPublicClient({
-    transport: http(AVAX_RPC_URL),
-  });
+  // Use Wagmi's public client
+  const client = usePublicClient();
 
   // Function to fetch maintenance records
-  const fetchMaintenanceRecords = React.useCallback(
+  const fetchMaintenanceRecords = useCallback(
     async (force = false) => {
-      if (!tokenId) return;
+      if (!tokenId || !client) return; // Ensure client is available
 
       // Check if we have cached data that's not expired
       const cacheKey = `token-${tokenId}`;
@@ -89,10 +85,12 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
         setErrorMessage("");
 
         console.log(`Fetching maintenance records for token: ${tokenId}`);
-        console.log(`Using RPC URL: ${AVAX_RPC_URL}`);
-        console.log(`Contract address: ${CARNFT_ADDRESS}`);
+        console.log(`Using contract address: ${CARNFT_ADDRESS}`);
+        console.log(
+          `Using public client from Wagmi for chain: ${client.chain.id}`
+        );
 
-        // Make the contract call directly
+        // Make the contract call using the Wagmi client
         const result = await client.readContract({
           address: CARNFT_ADDRESS,
           abi: CARNFT_ABI,
@@ -116,14 +114,19 @@ const MaintenanceRecordsList: React.FC<MaintenanceRecordsListProps> = ({
       } catch (err) {
         console.error("Error fetching maintenance records:", err);
         setIsError(true);
-        setErrorMessage(err instanceof Error ? err.message : String(err));
+        // Extract a more specific error message if possible
+        let detailedError = "An unknown error occurred.";
+        if (err instanceof Error) {
+          detailedError = err.message;
+        }
+        setErrorMessage(detailedError);
         setIsLoading(false);
       }
     },
-    [tokenId, client]
+    [tokenId, client] // Add client to dependency array
   );
 
-  // Fetch records when component mounts or tokenId changes
+  // Fetch records when component mounts or tokenId/client changes
   useEffect(() => {
     fetchMaintenanceRecords();
   }, [fetchMaintenanceRecords]);
