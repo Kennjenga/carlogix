@@ -11,6 +11,9 @@ contract CarNFT is ERC721Enumerable, Ownable {
     using StringUtils for uint256;
     Counters.Counter private _tokenIds;
 
+    // USDT contract address for payments
+    address public defaultStablecoin;
+
     // Struct to store manufacturer details
     struct Manufacturer {
         string name;
@@ -101,7 +104,23 @@ contract CarNFT is ERC721Enumerable, Ownable {
         _;
     }
 
-    constructor() ERC721("Car Digital Logbook", "CDLB") {}
+    constructor(
+        address _defaultStablecoin
+    ) ERC721("Car Digital Logbook", "CDLB") {
+        require(_defaultStablecoin != address(0), "Invalid stablecoin address");
+        defaultStablecoin = _defaultStablecoin;
+    }
+
+    /**
+     * @dev Update the default stablecoin address
+     * @param _defaultStablecoin New stablecoin contract address
+     */
+    function updateDefaultStablecoin(
+        address _defaultStablecoin
+    ) external onlyOwner {
+        require(_defaultStablecoin != address(0), "Invalid stablecoin address");
+        defaultStablecoin = _defaultStablecoin;
+    }
 
     /**
      * @dev Mint a new car NFT

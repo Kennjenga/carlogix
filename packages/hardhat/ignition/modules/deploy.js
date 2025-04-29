@@ -11,10 +11,10 @@ async function main() {
     // Use a lowercase version of the USDT address to avoid checksum issues
     const usdtAddress = "0xb9c31ea1d475c25e58a1be1a46221db55e5a7c6e";
     console.log(`Using USDT address: ${usdtAddress}`);
-    
+
     // Using 0.1 USDT for testing as requested
     const minMonthlyPremiumUsdt = ethers.parseUnits("0.1", 6); // 0.1 USDT in base units
-    
+
     // Maximum coverage multiplier (10x) as discussed for the Kenyan market
     const maxCoverageMultiplier = 10;
 
@@ -69,10 +69,21 @@ async function main() {
     // Deploy CarNFT without linking libraries
     console.log("Deploying CarNFT...");
     const CarNFT = await ethers.getContractFactory("CarNFT");
-    const carNFT = await CarNFT.deploy();
+    const carNFT = await CarNFT.deploy(usdtAddress);
     await carNFT.waitForDeployment();
     const carNFTAddress = await carNFT.getAddress();
     console.log(`CarNFT deployed to: ${carNFTAddress}`);
+
+    // Deploy CarMarketplace
+    console.log("Deploying CarMarketplace...");
+    const CarMarketplace = await ethers.getContractFactory("CarMarketplace");
+    const carMarketplace = await CarMarketplace.deploy(
+      carNFTAddress,
+      usdtAddress
+    );
+    await carMarketplace.waitForDeployment();
+    const carMarketplaceAddress = await carMarketplace.getAddress();
+    console.log(`CarMarketplace deployed to: ${carMarketplaceAddress}`);
 
     // Deploy CarInsurancePool without linking libraries
     console.log("Deploying CarInsurancePool...");
