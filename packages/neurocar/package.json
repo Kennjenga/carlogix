@@ -36,6 +36,7 @@
     "react-dom": "^19.0.0",
     "react-leaflet": "^5.0.0",
     "react-qr-code": "^2.0.15",
+    "sonner": "^2.0.3",
     "tailwindcss-animate": "^1.0.7",
     "thirdweb": "^5.93.6",
     "viem": "^2.24.1",

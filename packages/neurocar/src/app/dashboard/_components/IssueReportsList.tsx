@@ -1,9 +1,7 @@
 "use client";
 
 import React from "react";
-import { useIssueReports } from "@/blockchain/hooks/useContractReads";
-import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
-import { IssueReport } from "@/types";
+import { useIssueReports, useResolveIssue } from "@/blockchain/hooks/useCarNFT";
 import {
   AlertTriangle,
   FileText,
@@ -11,10 +9,18 @@ import {
   Loader,
   XCircle,
   Printer,
-  RefreshCw, // Added for retry button
+  RefreshCw,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
+interface IssueReport {
+  timestamp: bigint;
+  issueType: string;
+  description: string;
+  resolved: boolean;
+  evidenceURI: string;
+}
 
 interface IssueReportsListProps {
   tokenId: string;
@@ -25,22 +31,22 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
     data: reports,
     isLoading,
     isError,
-    error, // Get the error object
+    error: fetchError,
     refetch,
-  } = useIssueReports(BigInt(tokenId)); // Removed hardcoded chainId
+  } = useIssueReports(BigInt(tokenId));
 
-  const carNFT = useCarNFTData(); // Removed hardcoded chainId
+  const { resolveIssue, isResolving } = useResolveIssue();
 
   // Handle resolving an issue
   const handleResolveIssue = async (reportIndex: number) => {
     try {
-      await carNFT.resolveIssue(
-        BigInt(tokenId),
-        reportIndex,
-        "Resolved via dashboard"
-      ); // Added default resolution note
-      // Refetch after resolving the issue
-      setTimeout(() => refetch?.(), 2000);
+      await resolveIssue({
+        tokenId: BigInt(tokenId),
+        reportIndex: BigInt(reportIndex),
+        onSuccess: () => {
+          setTimeout(() => refetch?.(), 2000);
+        },
+      });
     } catch (error) {
       console.error("Error resolving issue:", error);
     }
@@ -89,7 +95,8 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
 
   // Display error state with detailed message
   if (isError || !reports) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorMessage =
+      fetchError instanceof Error ? fetchError.message : String(fetchError);
     return (
       <div className="rounded-md bg-red-50 p-4 mb-4">
         <div className="flex">
@@ -201,10 +208,24 @@ const IssueReportsList: React.FC<IssueReportsListProps> = ({ tokenId }) => {
                 {!report.resolved && (
                   <button
                     onClick={() => handleResolveIssue(index)}
-                    className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={isResolving}
+                    className={`inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded ${
+                      isResolving
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                        : "text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    }`}
                   >
-                    <CheckCircle size={12} className="mr-1" />
-                    Mark as Resolved
+                    {isResolving ? (
+                      <>
+                        <Loader size={12} className="animate-spin mr-1" />
+                        Resolving...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={12} className="mr-1" />
+                        Mark as Resolved
+                      </>
+                    )}
                   </button>
                 )}
               </div>

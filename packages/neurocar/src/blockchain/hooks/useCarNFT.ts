@@ -477,3 +477,72 @@ export function useTokenIdByRegistration(registrationNumber?: string) {
     enabled: !!registrationNumber,
   });
 }
+
+// Combined hook for CarNFT operations
+export function useCarNFTData() {
+  const { mintCar, isMinting, error: mintError } = useMintCar();
+  const { addRecord: addMaintenanceRecord, isAdding: isAddingMaintenance, error: maintenanceError } = useAddMaintenanceRecord();
+  const { reportIssue, isReporting, error: reportError } = useReportIssue();
+
+  const handleMintCar = async (
+    address: Address,
+    vin: string,
+    make: string,
+    model: string,
+    year: number,
+    registrationNumber: string,
+    imageURI: string
+  ) => {
+    return await mintCar({
+      to: address,
+      vin,
+      make,
+      model,
+      year: BigInt(year),
+      registrationNumber,
+      imageURI
+    });
+  };
+
+  const handleAddMaintenanceRecord = async (
+    tokenId: bigint,
+    description: string,
+    serviceProvider: string,
+    mileage: number,
+    documentURI: string
+  ) => {
+    return await addMaintenanceRecord({
+      tokenId,
+      description,
+      serviceProvider,
+      mileage: BigInt(mileage),
+      documentURI
+    });
+  };
+
+  const handleReportIssue = async (
+    tokenId: bigint,
+    issueType: string,
+    description: string,
+    evidenceURI: string
+  ) => {
+    return await reportIssue({
+      tokenId,
+      issueType,
+      description,
+      evidenceURI
+    });
+  };
+
+  return {
+    mintCar: handleMintCar,
+    addMaintenanceRecord: handleAddMaintenanceRecord,
+    reportIssue: handleReportIssue,
+    isMinting,
+    isAddingMaintenance,
+    isReporting,
+    mintError,
+    maintenanceError,
+    reportError
+  };
+}

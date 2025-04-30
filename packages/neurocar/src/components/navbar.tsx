@@ -26,18 +26,22 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8">
-          {["Home", "Dashboard", "mymech", "mechanics"].map((item, index) => (
-            <Link
-              key={index}
-              href={
-                index === 0 ? "/" : `/${item.toLowerCase().replace(" ", "")}`
-              }
-              className="text-slate-700 hover:text-blue-600 transition font-mono text-sm relative group"
-            >
-              <span>{item.toUpperCase()}</span>
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-          ))}
+          {["Home", "Dashboard", "mymech", "mechanics", "Marketplace"].map(
+            (item) => (
+              <Link
+                key={item} // Use item as key for stability if order changes
+                href={
+                  item === "Home"
+                    ? "/"
+                    : `/${item.toLowerCase().replace(" ", "")}`
+                }
+                className="text-slate-700 hover:text-blue-600 transition font-mono text-sm relative group"
+              >
+                <span>{item.toUpperCase()}</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            )
+          )}
 
           <div className="relative pl-6 ml-2 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-px before:bg-blue-100">
             <ConnectButton
@@ -61,24 +65,28 @@ const Navbar = () => {
       <div
         className={`md:hidden absolute w-full bg-slate-50 border-b border-blue-100 shadow-lg transition-all duration-300 ease-in-out z-10 ${
           mobileMenuOpen
-            ? "max-h-60 py-4 opacity-100"
+            ? "max-h-96 py-4 opacity-100" // Increased max-h slightly
             : "max-h-0 py-0 opacity-0 overflow-hidden"
         }`}
       >
         <div className="container mx-auto px-6 flex flex-col space-y-4">
-          {["Home", "Dashboard", "mymech", "mechanics"].map((item, index) => (
-            <Link
-              key={index}
-              href={
-                index === 0 ? "/" : `/${item.toLowerCase().replace(" ", "")}`
-              }
-              className="text-slate-700 hover:text-blue-600 transition font-mono py-2 border-b border-slate-100 last:border-0"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="text-blue-500 mr-2">›</span>
-              {item.toUpperCase()}
-            </Link>
-          ))}
+          {["Home", "Dashboard", "mymech", "mechanics", "Marketplace"].map(
+            (item) => (
+              <Link
+                key={item} // Use item as key
+                href={
+                  item === "Home"
+                    ? "/"
+                    : `/${item.toLowerCase().replace(" ", "")}`
+                }
+                className="text-slate-700 hover:text-blue-600 transition font-mono py-2 border-b border-slate-100 last:border-0"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <span className="text-blue-500 mr-2">›</span>
+                {item.toUpperCase()}
+              </Link>
+            )
+          )}
 
           <div className="py-2">
             <ConnectButton
