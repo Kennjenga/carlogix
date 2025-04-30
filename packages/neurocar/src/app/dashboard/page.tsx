@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
-import { Car, Plus, Wrench, AlertTriangle, Loader, QrCode } from "lucide-react";
+import {
+  Car,
+  Plus,
+  Wrench,
+  AlertTriangle,
+  Loader,
+  QrCode,
+  Shield,
+} from "lucide-react";
 import { CarWithId } from "@/types";
 import MaintenanceRecordsList from "./_components/MaintenanceRecordsList";
 import { useUserCars } from "@/blockchain/hooks/useUserCars";
@@ -11,6 +19,7 @@ import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
 import IPFSUpload from "./_components/IPFSUpload";
 import QRCode from "react-qr-code";
 import IssueReportsList from "./_components/IssueReportsList";
+import { InsuranceDetails } from "./_components/InsuranceDetails";
 
 export default function Dashboard() {
   const { address } = useAccount();
@@ -383,6 +392,17 @@ export default function Dashboard() {
                     <AlertTriangle size={16} className="mr-2" />
                     Issue Reports
                   </button>
+                  <button
+                    onClick={() => setActiveTab("insurance")}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
+                      activeTab === "insurance"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <Shield size={16} className="mr-2" />
+                    Insurance
+                  </button>
                 </nav>
               </div>
 
@@ -393,6 +413,9 @@ export default function Dashboard() {
                 )}
                 {activeTab === "issues" && (
                   <IssueReportsList tokenId={selectedCar.id} />
+                )}
+                {activeTab === "insurance" && (
+                  <InsuranceDetails tokenId={BigInt(selectedCar.id)} />
                 )}
               </div>
             </>
