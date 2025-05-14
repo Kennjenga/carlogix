@@ -1,10 +1,11 @@
-
+![image](https://github.com/user-attachments/assets/df6202c1-71e8-47a4-8de4-58b2540f01e2)
 
 # NeuroCar
 
 NeuroCar is a cutting-edge platform that leverages blockchain technology to revolutionize vehicle ownership, management, and insurance. By combining the power of decentralized systems with advanced smart contracts, NeuroCar provides a secure, transparent, and efficient way to manage vehicle records, maintenance history, and insurance claims.
 
-![neuro_car](./home.png)
+![image](https://github.com/user-attachments/assets/3b3df258-6492-4b68-ba20-544bda343026)
+
 
 ## Key Features
 
@@ -14,7 +15,8 @@ NeuroCar is a cutting-edge platform that leverages blockchain technology to revo
 - Maintenance records, issue reports, and vehicle history are securely stored and immutable.
 - Ownership transfers are simplified and verifiable, enhancing resale value.
 
-![Dashboard Page](./dashboard.png)
+![image](https://github.com/user-attachments/assets/c30ef20b-4fe4-4a33-9146-149404270708)
+
 
 ### 2. **Maintenance and Issue Tracking**
 - Comprehensive maintenance history with service provider details and mileage.
@@ -25,7 +27,11 @@ NeuroCar is a cutting-edge platform that leverages blockchain technology to revo
 - AI-driven tools to analyze maintenance records and issue reports.
 - Provides actionable insights for vehicle diagnostics and repair planning.
 
-![AI Tools Page](./neuro_car.png)
+![image](https://github.com/user-attachments/assets/5ab6966c-4028-433b-8b10-c8fa3cda1a8e)
+![image](https://github.com/user-attachments/assets/6428b018-71eb-4d11-934a-ca3512e58197)
+![image](https://github.com/user-attachments/assets/00f9b658-4381-40dd-93a0-8c9b4732b77f)
+
+
 
 ### 4. **Decentralized Insurance Pools**
 - Community-driven insurance pools with transparent management.
