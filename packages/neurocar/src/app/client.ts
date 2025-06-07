@@ -1,6 +1,7 @@
 "use client"
 
 import { createThirdwebClient } from "thirdweb";
+import { defineChain } from "thirdweb/chains";
 import {
   inAppWallet,
   createWallet,
@@ -11,11 +12,30 @@ import {
 const clientId = process.env.NEXT_PUBLIC_TEMPLATE_CLIENT_ID;
 
 if (!clientId) {
-  throw new Error("No client ID provided");
+  throw new Error("No Thirdweb client ID provided. Please set NEXT_PUBLIC_TEMPLATE_CLIENT_ID in your environment variables.");
 }
 
 export const client = createThirdwebClient({
   clientId: clientId,
+});
+
+// Define Avalanche Fuji testnet chain
+export const avalancheFuji = defineChain({
+  id: 43113,
+  name: "Avalanche Fuji C-Chain",
+  nativeCurrency: {
+    name: "Avalanche",
+    symbol: "AVAX",
+    decimals: 18,
+  },
+  rpc: "https://api.avax-test.network/ext/bc/C/rpc",
+  blockExplorers: [
+    {
+      name: "SnowTrace",
+      url: "https://testnet.snowtrace.io",
+    },
+  ],
+  testnet: true,
 });
 
 export const wallets = [
@@ -23,11 +43,7 @@ export const wallets = [
     auth: {
       options: [
         "google",
-        // "discord",
-        // "telegram",
-        // "farcaster",
         "email",
-        // "x",
         "passkey",
         "phone",
       ],

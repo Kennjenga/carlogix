@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useActiveAccount } from "thirdweb/react";
 import Image from "next/image";
 import {
   Car,
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { CarWithId } from "@/types";
 import MaintenanceRecordsList from "./_components/MaintenanceRecordsList";
-import { useUserCars } from "@/blockchain/hooks/useUserCars";
+import { useUserCars } from "@/blockchain/hooks/useUserCarsThirdweb";
 import { useCarNFTData } from "@/blockchain/hooks/useCarNFT";
 import IPFSUpload from "./_components/IPFSUpload";
 import QRCode from "react-qr-code";
@@ -22,7 +22,8 @@ import IssueReportsList from "./_components/IssueReportsList";
 import { InsuranceDetails } from "./_components/InsuranceDetails";
 
 export default function Dashboard() {
-  const { address } = useAccount();
+  const account = useActiveAccount();
+  const address = account?.address;
   const [selectedCar, setSelectedCar] = useState<CarWithId | null>(null);
   const [activeTab, setActiveTab] = useState("maintenance");
   const [mintLoading, setMintLoading] = useState(false);

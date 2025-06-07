@@ -1,6 +1,7 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButton } from "thirdweb/react";
+import { client, wallets, avalancheFuji } from "@/app/client";
 import Link from "next/link";
 
 export default function Home() {
@@ -333,9 +334,14 @@ export default function Home() {
           </p>
           <div className="inline-block backdrop-blur-sm bg-white/10 p-2 rounded-lg">
             <ConnectButton
-              accountStatus={{
-                smallScreen: "avatar",
-                largeScreen: "full",
+              client={client}
+              wallets={wallets}
+              chain={avalancheFuji}
+              connectButton={{
+                label: "Connect Wallet",
+              }}
+              connectModal={{
+                size: "wide",
               }}
             />
           </div>

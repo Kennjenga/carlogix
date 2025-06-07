@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-// import { type Address } from "viem";
-import { useAccount } from "wagmi";
+import { useActiveAccount } from "thirdweb/react";
 import { formatUnits } from "viem";
 import Image from "next/image";
 import {
@@ -35,7 +34,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
   onPurchaseSuccess,
   onCancelSuccess,
 }) => {
-  const { address: connectedAddress, isConnected } = useAccount();
+  const account = useActiveAccount();
+  const connectedAddress = account?.address;
+  const isConnected = !!account;
   const [statusMessage, setStatusMessage] = useState<{
     type: "info" | "error" | "success";
     message: string;

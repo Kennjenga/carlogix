@@ -1,5 +1,6 @@
 "use client";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButton } from "thirdweb/react";
+import { client, wallets, avalancheFuji } from "@/app/client";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useState } from "react";
@@ -45,9 +46,15 @@ const Navbar = () => {
 
           <div className="relative pl-6 ml-2 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-px before:bg-blue-100">
             <ConnectButton
-              showBalance={false}
-              chainStatus="icon"
-              accountStatus="avatar"
+              client={client}
+              wallets={wallets}
+              chain={avalancheFuji}
+              connectButton={{
+                label: "Connect Wallet",
+              }}
+              connectModal={{
+                size: "compact",
+              }}
             />
           </div>
         </div>
@@ -90,9 +97,15 @@ const Navbar = () => {
 
           <div className="py-2">
             <ConnectButton
-              showBalance={false}
-              chainStatus="icon"
-              accountStatus="avatar"
+              client={client}
+              wallets={wallets}
+              chain={avalancheFuji}
+              connectButton={{
+                label: "Connect Wallet",
+              }}
+              connectModal={{
+                size: "compact",
+              }}
             />
           </div>
         </div>
